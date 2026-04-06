@@ -1,0 +1,21 @@
+[project]
+name = "layer-1"
+version = "0.1.0"
+description = ""
+requires-python = ">=3.13"
+dependencies = [
+    "openai>=2.30.0",
+    "python-dotenv>=1.2.2",
+]
+
+[tool.mypy]
+strict = true
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["layer_1"]
