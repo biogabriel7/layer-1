@@ -73,9 +73,15 @@ def call_api(
         temperature=0.0,
         response_format={"type": "json_object"},
         messages=[
-            {"role": "system", "content": system_prompt},
+            {
+                "role": "system",
+                "content": system_prompt,
+            },
             {"role": "user", "content": user_msg},
         ],
+        extra_body={
+            "transforms": ["anthropic-cache"],
+        },
     )
     content = response.choices[0].message.content
     assert content is not None
