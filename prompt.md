@@ -87,16 +87,9 @@ Respond with valid JSON matching this exact schema:
       "mastery_level": "emerging | developing | proficient | exceeding | null",
       "confidence": "high | medium | low"
     }
-  ],
-  "observation_type": "individual | group",
-  "signal_count": 3,
-  "insight_density": "low | medium | high"
+  ]
 }
 ```
-notes:
-- `signal_count` must equal the length of the `signals` array.
-- `observation_type` is derived from the student count provided in the user message: 1 = "individual", >1 = "group".
-- `insight_density` is derived from signal count: 0-1 = "low", 2-3 = "medium", 4+ = "high".
 
 <!-- ============================================================
      EXAMPLES

@@ -127,7 +127,9 @@ def process_row(
                     if rk not in signal:
                         raise ValueError(f"signal[{i}] missing required key: {rk}")
 
-    result = postprocess(raw, student_count)
+    signals = raw.get("signals", [])
+    assert isinstance(signals, list)
+    result = postprocess({"signals": signals}, student_count)
 
     output = {
         "signals": result["signals"],
