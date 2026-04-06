@@ -38,13 +38,11 @@ def build_user_message(observation: str, student_count: int) -> str:
     return json.dumps({"observation": observation, "student_count": student_count})
 
 
-def postprocess(result: dict[str, object]) -> dict[str, object]:
+def postprocess(result: dict[str, object], student_count: int) -> dict[str, object]:
     """Enforce deterministic fields regardless of what the model returned."""
     signals = result.get("signals", [])
     assert isinstance(signals, list)
     signal_count = len(signals)
-    student_count = result.get("student_count", 1)
-    assert isinstance(student_count, int)
 
     result["signal_count"] = signal_count
 
@@ -113,11 +111,25 @@ def process_row(
         return key
 
     raw = call_api(client, system_prompt, observation, student_count)
-    raw["student_count"] = student_count
-    raw["comment_key"] = comment_key
-    result = postprocess(raw)
 
-    out_path.write_text(json.dumps(result, indent=2, ensure_ascii=False))
+    required_signal_keys = {"evidence", "type", "sel_competencies", "mastery_level", "confidence"}
+    signals = raw.get("signals", [])
+    if isinstance(signals, list):
+        for i, signal in enumerate(signals):
+            if isinstance(signal, dict):
+                for rk in required_signal_keys:
+                    if rk not in signal:
+                        raise ValueError(f"signal[{i}] missing required key: {rk}")
+
+    result = postprocess(raw, student_count)
+
+    output = {
+        "signals": result["signals"],
+        "observation_type": result["observation_type"],
+        "signal_count": result["signal_count"],
+        "insight_density": result["insight_density"],
+    }
+    out_path.write_text(json.dumps(output, indent=2, ensure_ascii=False))
     return key
 
 
