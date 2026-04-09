@@ -17,18 +17,18 @@ Reads teacher observations from `sample-obs.csv`, sends each one to an LLM via O
 uv sync                        # installs dependencies into the project's virtual environment
 uv run extract.py --limit 5   # runs extract.py in the venv, stops after 5 rows (for testing)
 uv run extract.py              # full run (3,119 observations)
-uv run eval.py                 # score results against golden dataset
+uv run eval.py                 # score results against golden.md dataset
 ```
 
 ## File Structure
 
 ```
 extract.py       # reads CSV → calls API → writes results/
-eval.py          # reads results/ + golden/ → reports 5 eval metrics
+eval.py          # reads results/ + golden.md → reports 5 eval metrics
 prompt.md        # system prompt — do not modify, managed separately
 sample-obs.csv   # 3,119 real observations (input)
 results/         # extraction output, gitignored
-golden/          # human-annotated observations for eval
+golden.md        # human-annotated observations for eval
 ```
 
 ## Deterministic Post-Processing
@@ -62,7 +62,7 @@ After parsing the LLM response, always enforce these in code regardless of what 
 | Type Accuracy | type match vs golden annotations | ≥95% |
 | Observation Type | matches `student_count` rule | 100% |
 
-Evidence Grounding and Observation Type are programmatic — run on all 3,119 observations. The other three require `golden/` annotations.
+Evidence Grounding and Observation Type are programmatic — run on all 3,119 observations. The other three require `golden.md` annotations.
 
 ## Project-Specific Rules
 

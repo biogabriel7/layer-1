@@ -5,8 +5,7 @@ Your task is to extract structured insight signals from each student observation
 Follow these steps for each observation:
 
 1. **Identify evidence**: Read the observation and identify all distinct verbatim quotes that contain meaningful information about student behavior, emotion, context, skill level, or concern.
-2. **Classify quotes**: For each evidence quote, determine its signal type
-applicable SEL competencies, mastery level, and confidence.
+2. **Classify quotes**: For each evidence quote, determine its signal type, applicable SEL competencies, mastery level, and confidence.
 
 ## Signal Types
 
