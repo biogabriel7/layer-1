@@ -389,19 +389,19 @@ Student Count: 1
 ## Example 64
 
 **Input**
-Observation: "Participó activamente en la discusión grupal sobre el cuento. Compartió sus ideas con confianza y escuchó atentamente a sus compañeros. Mostró una buena comprensión del texto al identificar los personajes principales y el conflicto de la historia."
+Observation: "Actively participated in the group discussion about the story. Shared ideas confidently and listened attentively to classmates. Showed a good understanding of the text by identifying the main characters and the conflict of the story."
 Student Count: 1
 
 ## Example 65
 
 **Input**
-Observation: "Tuvo dificultades para concentrarse durante la lección de matemáticas. Se levantó de su asiento varias veces y no completó los ejercicios asignados. Necesita apoyo adicional para mantenerse enfocado en las tareas."
+Observation: "Had difficulty concentrating during the math lesson. Got up from the seat several times and did not complete the assigned exercises. Needs additional support to stay focused on tasks."
 Student Count: 1
 
 ## Example 66
 
 **Input**
-Observation: "Se mostró muy entusiasmada durante la actividad de arte. Dijo que pintar la hace sentir feliz y tranquila. Compartió sus materiales con una compañera que no tenía suficientes colores."
+Observation: "Was very enthusiastic during the art activity. Said that painting makes her feel happy and calm. Shared her materials with a classmate who did not have enough colors."
 Student Count: 1
 
 ## Example 67
@@ -569,7 +569,7 @@ Student Count: 1
 ## Example 94
 
 **Input**
-Observation: "Los estudiantes trabajaron en equipos para crear un mapa conceptual sobre los ecosistemas. Cada miembro contribuyó con ideas y se organizaron para completar la tarea a tiempo. Algunos grupos tuvieron dificultades para ponerse de acuerdo pero resolvieron sus diferencias mediante el diálogo."
+Observation: "The students worked in teams to create a concept map about ecosystems. Each member contributed ideas and they organized themselves to complete the task on time. Some groups had difficulty reaching agreement but resolved their differences through dialogue."
 Student Count: 16
 
 ## Example 95
