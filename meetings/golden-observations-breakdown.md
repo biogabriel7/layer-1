@@ -18,7 +18,5 @@ Based on the 100 examples in `golden.md`.
 | Purely academic (no SEL) | 10 |
 | Multi-signal high-density (4+) | 39 |
 | Vague/low-density (0-1 signals) | 14 |
-| Longest observation | #10 (Romeo, ~150 words) |
-| Shortest observations | #7 "N/A", #75 "Absent today." |
 
 ---
