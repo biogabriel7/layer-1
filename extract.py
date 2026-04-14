@@ -19,7 +19,7 @@ API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
 RESULTS_DIR = Path("results")
 PROMPT_PATH = Path("prompt.md")
-MODEL = "anthropic/claude-sonnet-4-6"
+MODEL = "anthropic/claude-opus-4-6"
 
 
 def cache_key(observation: str, student_count: int) -> str:
@@ -118,7 +118,7 @@ def process_row(
 
     raw = call_api(client, system_prompt, observation, student_count)
 
-    required_signal_keys = {"evidence", "type", "sel_competencies", "mastery_level", "confidence"}
+    required_signal_keys = {"evidence", "type", "sel_competencies", "confidence"}
     signals = raw.get("signals", [])
     if isinstance(signals, list):
         for i, signal in enumerate(signals):

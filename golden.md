@@ -1,9 +1,8 @@
 "signals": [
     {
       "evidence": "exact verbatim quote from observation",
-      "type": "behavioral_evidence | emotional_indicator | context_marker | mastery_signal | concern_flag",
+      "type": "behavioral_evidence | emotional_indicator | context_marker | concern_flag",
       "sel_competencies": ["self_management", "social_awareness", "..."],
-      "mastery_level": "emerging | developing | proficient | exceeding | null",
       "confidence": "high | medium | low"
     }
 
