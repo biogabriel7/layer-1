@@ -52,7 +52,7 @@ Student Count: 1
 ## Example 8
 
 **Input**
-Observation: "Good collaboration with all his colleagues on the collaborative paint project"
+Observation: "Her commitment to collaborative learning is evident in her active participation and willingness to engage with peers."
 Student Count: 4
 
 ## Example 9
@@ -64,13 +64,13 @@ Student Count: 4
 ## Example 10
 
 **Input**
-Observation: "During the Tribe Meet, Romeo chose not to join the game we played. This attitude wasn't new, but after about ten minutes he decided to join, and his colleagues welcomed him. I saw Romeo having fun in the game, and he seemed to enjoy being part of the team. Later, when we walked back to school, I asked him how the experience felt. He told me that he enjoyed it, but at the beginning he was bored and didn't want to take part. His main concern was that he can't find his own place in the tribe, which makes him feel like he doesn't like the group. I encouraged him to get more involved in the games we play and to be a bit more open with his crew members. Many activities are designed to help the group connect and collaborate. By participating, he can make new friends and slowly find his own place in the tribe."
+Observation: "Ravi had a particularly challenging day and needed many reminders to stay focused, control his body, and pay attention during activities. We took time to talk about this together, and I reminded him that everyone has hard days and that asking for help is always okay. When we reflected as a group about who had followed the activity instructions, Ravi was honest and shared that he hadn't. I appreciated his honesty very much. It shows that he is learning to recognize his own feelings and choices, which is an important part of growing. With continued support and encouragement, Ravi is developing the self-awareness and courage he needs to manage difficult moments."
 Student Count: 1
 
 ## Example 11
 
 **Input**
-Observation: "Jasmine had difficulty grasping the decomposing method at first, as she wasn't fully engaged during the group activity. However, after one-on-one support, she understood the concept. She was able to decompose numbers from 2 to 6 by herself but eventually became frustrated and started crying, saying she ""can't do hard things."" She tends to get discouraged easily when working alone and needs encouragement to build resilience and confidence in tackling challenges."
+Observation: "Children learned more about weaving by creating a small rug for toy animals. For Andrei, making mistakes felt overwhelming, and he became frustrated and tearful. However, with encouragement and a bit of support from the adult, he was able to continue, making him the first to finish it. This made him feel proud. With encouragement, Andrei is able to trust his abilities and keep going."
 Student Count: 1
 
 ## Example 12
