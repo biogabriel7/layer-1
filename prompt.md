@@ -5,7 +5,7 @@ Your task is to extract structured insight signals from each student observation
 Follow these steps for each observation:
 
 1. **Identify evidence**: Read the observation and identify all distinct verbatim quotes that contain meaningful information about student behavior, emotion, context, skill level, or concern.
-2. **Classify quotes**: For each evidence quote, determine its signal type, applicable SEL competencies, and confidence.
+2. **Classify quotes**: For each evidence quote, determine its signal type, applicable SEL competencies, and observation confidence.
 
 ## Signal Types
 
@@ -35,7 +35,7 @@ Map each signal to zero or more CASEL competencies. Use exactly these labels:
 
 A signal may map to multiple competencies.
 
-## Confidence
+## Observation Confidence
 
 - `high` — Evidence directly states the behavior/emotion/context.
 - `medium` — Evidence clearly implies but doesn't explicitly state.
@@ -71,7 +71,7 @@ Respond with valid JSON matching this exact schema:
       "evidence": "exact verbatim quote from observation",
       "type": "behavioral_evidence | emotional_indicator | context_marker | concern_flag",
       "sel_competencies": ["self_management", "social_awareness", "..."],
-      "confidence": "high | medium | low"
+      "observation_confidence": "high | medium | low"
     }
   ]
 }
@@ -94,37 +94,37 @@ Student count: 1
       "evidence": "During the Tribe Meet",
       "type": "context_marker",
       "sel_competencies": [],
-      "confidence": "high"
+      "observation_confidence": "high"
     },
     {
       "evidence": "Romeo chose not to join the game we played. This attitude wasn’t new",
       "type": "concern_flag",
       "sel_competencies": [],
-      "confidence": "high"
+      "observation_confidence": "high"
     },
     {
       "evidence": "after about ten minutes he decided to join",
       "type": "behavioral_evidence",
       "sel_competencies": ["self_management"],
-      "confidence": "high"
+      "observation_confidence": "high"
     },
     {
       "evidence": "I saw Romeo having fun in the game, and he seemed to enjoy being part of the team.",
       "type": "behavioral_evidence",
       "sel_competencies": ["relationship_skills"],
-      "confidence": "medium"
+      "observation_confidence": "medium"
     },
     {
       "evidence": "He told me that he enjoyed it, but at the beginning he was bored and didn’t want to take part",
       "type": "emotional_indicator",
       "sel_competencies": ["self_awareness"],
-      "confidence": "high"
+      "observation_confidence": "high"
     },
     {
       "evidence": "His main concern was that he can’t find his own place in the tribe, which makes him feel like he doesn’t like the group",
       "type": "concern_flag",
       "sel_competencies": ["self_awareness", "social_awareness"],
-      "confidence": "high"
+      "observation_confidence": "high"
     }
   ]
 }
@@ -144,13 +144,13 @@ Student Count: 4
       "evidence": "Good collaboration with all his colleagues on the collaborative paint project",
       "type": "behavioral_evidence",
       "sel_competencies": ["relationship_skills"],
-      "confidence": "low"
+      "observation_confidence": "low"
     }
   ]
 }
 ```
 
-### Example 3: Concern flag with medium and low confidence signals that do not match any SEL competencies.
+### Example 3: Concern flag with medium and low observation confidence signals that do not match any SEL competencies.
 **Input**
 Observation: "Jasmine had difficulty grasping the decomposing method at first, as she wasn’t fully engaged during the group activity. However, after one-on-one support, she understood the concept. She was able to decompose numbers from 2 to 6 by herself but eventually became frustrated and started crying, saying she ""can't do hard things."" She tends to get discouraged easily when working alone and needs encouragement to build resilience and confidence in tackling challenges"
 
@@ -164,31 +164,31 @@ Student Count: 1
       "evidence": "Jasmine had difficulty grasping the decomposing method at first",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "confidence": "medium"
+      "observation_confidence": "medium"
     },
     {
       "evidence": "she wasn’t fully engaged during the group activity",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "confidence": "medium"
+      "observation_confidence": "medium"
     },
     {
       "evidence": "after one-on-one support, she understood the concept",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "confidence": "medium"
+      "observation_confidence": "medium"
     },
     {
       "evidence": "She was able to decompose numbers from 2 to 6 by herself",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "confidence": "high"
+      "observation_confidence": "high"
     },
     {
       "evidence": "eventually became frustrated and started crying, saying she \"can’t do hard things.\"",
       "type": "concern_flag",
       "sel_competencies": [],
-      "confidence": "high"
+      "observation_confidence": "high"
     }
   ]
 }

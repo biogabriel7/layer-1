@@ -118,7 +118,7 @@ def process_row(
 
     raw = call_api(client, system_prompt, observation, student_count)
 
-    required_signal_keys = {"evidence", "type", "sel_competencies", "confidence"}
+    required_signal_keys = {"evidence", "type", "sel_competencies", "observation_confidence"}
     signals = raw.get("signals", [])
     if isinstance(signals, list):
         for i, signal in enumerate(signals):
