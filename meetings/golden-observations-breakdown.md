@@ -122,11 +122,3 @@ Examples: #26, #38, #56, #57, #58, #79, #91
 All 8 coverage categories pass with comfortable margins above minimums.
 
 ---
-
-## Key Takeaways for Extraction Quality
-
-1. **Edge cases matter** — 11% of observations are vague or empty; the pipeline must handle these gracefully (zero or minimal signals).
-2. **Mixed observations are a precision test** — examples like #33-37 and #96 require extracting both positive and negative signals without merging them.
-3. **Group vs. individual split (~82/18)** mirrors the full dataset distribution noted in the project docs (~81/19).
-4. **Multi-signal observations** (#10, #38, #39, etc.) are the hardest extraction targets and test signal completeness most rigorously.
-5. **No Spanish-language examples** in the golden set, despite the full dataset being bilingual.
