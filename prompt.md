@@ -51,6 +51,7 @@ A signal may map to multiple competencies.
 6. **Empty or meaningless content**: If the observation contains no meaningful content (e.g., "No Comment", blank text), return an empty signals array.
 7. **Short observations**: Extract what's there. A single sentence can yield one valid signal. Don't pad with invented signals.
 8. **Long observations**: These often contain 5+ signals. Extract all of them. If the text describes multiple students by name, yield separate signals for each described behavior.
+9. **Reasoning**: For each signal, include a reasoning string that addresses all three classification decisions: (a) why this signal type was chosen and what alternatives were ruled out, (b) why these specific SEL competencies apply or why none do, and (c) what about the evidence drives the confidence level. Be specific — reference the actual words in the evidence that informed each decision.
 
 ## What NOT to Extract
 
@@ -71,7 +72,8 @@ Respond with valid JSON matching this exact schema:
       "evidence": "exact verbatim quote from observation",
       "type": "behavioral_evidence | emotional_indicator | context_marker | concern_flag",
       "sel_competencies": ["self_management", "social_awareness", "..."],
-      "observation_confidence": "high | medium | low"
+      "observation_confidence": "high | medium | low",
+      "reasoning": "Explain: (a) why this type was chosen over alternatives, (b) why these SEL competencies apply or why none do, (c) what in the evidence drives the confidence level"
     }
   ]
 }
@@ -94,37 +96,43 @@ Student count: 1
       "evidence": "During the Tribe Meet",
       "type": "context_marker",
       "sel_competencies": [],
-      "observation_confidence": "high"
+      "observation_confidence": "high",
+      "reasoning": "Type: context_marker because 'During the Tribe Meet' identifies the setting and activity framing the observation — it describes a situation, not a student action or emotion, ruling out behavioral_evidence and emotional_indicator. It is not a concern because it carries no evaluative language. Competencies: none, because context markers describe circumstances, not student-demonstrated skills. Confidence: high because the teacher explicitly and unambiguously names the specific event."
     },
     {
       "evidence": "Romeo chose not to join the game we played. This attitude wasn’t new",
       "type": "concern_flag",
       "sel_competencies": [],
-      "observation_confidence": "high"
+      "observation_confidence": "high",
+      "reasoning": "Type: concern_flag rather than behavioral_evidence because the phrase ‘This attitude wasn’t new’ signals a recurring pattern of disengagement the teacher finds noteworthy — this elevates it beyond a one-off action into something needing attention. Competencies: none, because the refusal to participate does not demonstrate any SEL competency; it could relate to self_management, but the text shows a deficit rather than a demonstrated skill, and we map competencies to what is shown, not what is lacking. Confidence: high because the teacher directly states both the specific behavior (‘chose not to join’) and its recurrence (‘wasn’t new’), leaving no ambiguity."
     },
     {
       "evidence": "after about ten minutes he decided to join",
       "type": "behavioral_evidence",
       "sel_competencies": ["self_management"],
-      "observation_confidence": "high"
+      "observation_confidence": "high",
+      "reasoning": "Type: behavioral_evidence because 'he decided to join' is a specific, observable action the teacher witnessed — not an emotion or a setting detail. It is not a concern_flag because joining is a positive behavioral shift, not a risk indicator. Competencies: self_management because the student regulated his initial reluctance and made a deliberate choice to participate without being forced — this reflects impulse control and self-motivation. Not relationship_skills because the decision to join was internal, not prompted by peer interaction. Confidence: high because the teacher directly observed the moment he joined and specifies the approximate timing ('after about ten minutes'), making this concrete and unambiguous."
     },
     {
       "evidence": "I saw Romeo having fun in the game, and he seemed to enjoy being part of the team.",
       "type": "behavioral_evidence",
       "sel_competencies": ["relationship_skills"],
-      "observation_confidence": "medium"
+      "observation_confidence": "medium",
+      "reasoning": "Type: behavioral_evidence because the teacher describes observing Romeo participating (‘having fun in the game’) and engaging with others (‘being part of the team’) — these are witnessed actions. Not emotional_indicator because the enjoyment is inferred by the teacher (‘seemed to enjoy’) rather than expressed by the student himself. Competencies: relationship_skills because being part of a team game and engaging positively with peers demonstrates cooperation and teamwork. Not social_awareness because the evidence shows participation, not perspective-taking or empathy toward others. Confidence: medium because the word ‘seemed’ indicates the teacher is interpreting Romeo’s internal state rather than reporting a directly stated or clearly observable behavior — the fun is inferred from body language or demeanor, not explicitly confirmed."
     },
     {
       "evidence": "He told me that he enjoyed it, but at the beginning he was bored and didn’t want to take part",
       "type": "emotional_indicator",
       "sel_competencies": ["self_awareness"],
-      "observation_confidence": "high"
+      "observation_confidence": "high",
+      "reasoning": "Type: emotional_indicator because the student directly communicated his feelings — ‘he enjoyed it’, ‘he was bored’, ‘didn’t want to take part’ — these are self-reported emotional states, not teacher-observed actions. Not behavioral_evidence because the core content is about how the student felt, not what he did. Competencies: self_awareness because Romeo is recognizing and articulating his own emotional states (enjoyment, boredom, reluctance) in a reflective conversation — this is a clear demonstration of identifying and naming one’s own feelings. Not self_management because the evidence describes awareness of emotions, not regulation of them. Confidence: high because these are the student’s own reported words conveyed through direct dialogue (‘He told me that...’), giving the teacher first-hand access to the student’s emotional experience with no inference required."
     },
     {
       "evidence": "His main concern was that he can’t find his own place in the tribe, which makes him feel like he doesn’t like the group",
       "type": "concern_flag",
       "sel_competencies": ["self_awareness", "social_awareness"],
-      "observation_confidence": "high"
+      "observation_confidence": "high",
+      "reasoning": "Type: concern_flag because the student's expressed inability to find his place and resulting negative feelings toward the group ('feel like he doesn't like the group') indicate an ongoing social-emotional struggle that warrants teacher attention. Not emotional_indicator alone because the language goes beyond reporting a transient feeling — it describes a persistent relational difficulty. Competencies: self_awareness because the student recognizes and names his own feelings of not belonging ('can't find his own place'); social_awareness because he is reflecting on his relationship to the group dynamic and how it affects his feelings toward others. Not relationship_skills because the evidence describes a struggle with group connection, not a demonstrated communication or cooperation skill. Confidence: high because the student directly stated this concern in his own words ('His main concern was that...'), providing unambiguous first-person evidence of both the struggle and its emotional impact."
     }
   ]
 }
@@ -144,7 +152,8 @@ Student Count: 4
       "evidence": "Good collaboration with all his colleagues on the collaborative paint project",
       "type": "behavioral_evidence",
       "sel_competencies": ["relationship_skills"],
-      "observation_confidence": "low"
+      "observation_confidence": "low",
+      "reasoning": "Type: behavioral_evidence because 'collaboration' refers to an observable action (working together on a project), not an emotion or setting. Not context_marker because the collaborative paint project is the activity the student participated in, not just a framing detail — the teacher is evaluating the student's participation. Not emotional_indicator because no feelings are described. Competencies: relationship_skills because collaboration on a group project directly demonstrates cooperation and teamwork with peers. Not social_awareness because there is no evidence of perspective-taking or empathy — only joint work. Confidence: low because the teacher uses the evaluative term 'good collaboration' without describing any specific actions, interactions, or behaviors that demonstrate what the collaboration looked like — the evidence is ambiguous and could describe anything from active leadership to passive compliance."
     }
   ]
 }
@@ -164,31 +173,36 @@ Student Count: 1
       "evidence": "Jasmine had difficulty grasping the decomposing method at first",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "observation_confidence": "medium"
+      "observation_confidence": "medium",
+      "reasoning": "Type: behavioral_evidence because ‘had difficulty grasping the decomposing method’ describes an observable academic performance outcome the teacher witnessed. Not concern_flag because a single instance of difficulty with a new concept is a normal learning challenge, not a pattern or risk indicator — the threshold for concern_flag requires recurring or escalating issues. Competencies: none, because struggling with an academic concept is a learning event, not a demonstration of any SEL competency. Not self_management because there is no evidence of the student attempting to regulate or self-correct here. Confidence: medium because ‘had difficulty grasping’ is the teacher’s interpretive assessment of the student’s understanding — the teacher observed something that led to this conclusion, but the specific behaviors underlying the judgment (confusion, wrong answers, etc.) are not described."
     },
     {
       "evidence": "she wasn’t fully engaged during the group activity",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "observation_confidence": "medium"
+      "observation_confidence": "medium",
+      "reasoning": "Type: behavioral_evidence because ‘wasn’t fully engaged during the group activity’ describes the teacher’s observation of the student’s participation level — an observable behavior. Not concern_flag because a single instance of partial disengagement in one activity does not meet the threshold of a recurring pattern or risk. Not context_marker because this describes the student’s behavior, not the setting. Competencies: none, because lack of engagement does not demonstrate any SEL competency. One might consider self_management (lack of focus) but we map competencies to skills the student demonstrated, not skills they failed to show. Confidence: medium because ‘wasn’t fully engaged’ is a subjective teacher judgment — the word ‘fully’ implies some engagement was present, and the teacher does not describe specific disengaged behaviors (e.g., looking away, not responding), leaving room for interpretation."
     },
     {
       "evidence": "after one-on-one support, she understood the concept",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "observation_confidence": "medium"
+      "observation_confidence": "medium",
+      "reasoning": "Type: behavioral_evidence because the teacher describes an observable outcome — the student understanding a concept after receiving one-on-one support. Not emotional_indicator because no feelings are mentioned. Not context_marker because the one-on-one support is part of the student’s learning experience, not just a setting detail. Competencies: none, because comprehension after teacher support is an academic outcome, not a demonstration of an SEL skill. One might consider self_management (persistence) but the text does not indicate the student actively sought help or self-regulated — the support was provided to her. Confidence: medium because ‘understood the concept’ is the teacher’s assessment of internal comprehension — the teacher likely verified this through some observable behavior (correct answers, verbal confirmation), but the specific evidence of understanding is not described in the text."
     },
     {
       "evidence": "She was able to decompose numbers from 2 to 6 by herself",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "observation_confidence": "high"
+      "observation_confidence": "high",
+      "reasoning": "Type: behavioral_evidence because 'was able to decompose numbers from 2 to 6 by herself' describes a specific, observable academic action with a concrete outcome. Not concern_flag because this is a positive achievement. Not context_marker because it describes what the student did, not the setting. Competencies: none, because decomposing numbers is a purely academic skill demonstration without an SEL dimension. One might consider self_management (independent work) but working independently on an assigned task does not by itself demonstrate goal-setting, impulse control, or emotional regulation. Confidence: high because the teacher specifies an exact, measurable action ('decompose numbers from 2 to 6') and confirms it was done independently ('by herself') — there is no ambiguity or teacher interpretation involved."
     },
     {
       "evidence": "eventually became frustrated and started crying, saying she \"can’t do hard things.\"",
       "type": "concern_flag",
       "sel_competencies": [],
-      "observation_confidence": "high"
+      "observation_confidence": "high",
+      "reasoning": "Type: concern_flag because the combination of frustration, crying, and a negative self-statement (‘can’t do hard things’) represents an emotional escalation that warrants teacher attention. Not emotional_indicator alone because the broader context (‘tends to get discouraged easily’) frames this as a recurring pattern, not a one-time emotional expression — the severity and pattern together cross the concern threshold. Competencies: none, because the behavior reflects an emotional struggle rather than a demonstrated SEL skill. One might consider self_awareness (she names her difficulty) but ‘can’t do hard things’ is a distressed outburst rather than reflective self-assessment — it expresses frustration, not genuine recognition of a growth area. Confidence: high because the teacher directly observed two concrete behaviors (became frustrated, started crying) and provides a direct quote from the student (‘can’t do hard things’), leaving no ambiguity about what occurred."
     }
   ]
 }
