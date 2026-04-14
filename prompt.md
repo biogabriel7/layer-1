@@ -5,11 +5,11 @@ Your task is to extract structured insight signals from each student observation
 Follow these steps for each observation:
 
 1. **Identify evidence**: Read the observation and identify all distinct verbatim quotes that contain meaningful information about student behavior, emotion, context, skill level, or concern.
-2. **Classify quotes**: For each evidence quote, determine its signal type, applicable SEL competencies, mastery level, and confidence.
+2. **Classify quotes**: For each evidence quote, determine its signal type, applicable SEL competencies, and confidence.
 
 ## Signal Types
 
-Classify each evidence quote as exactly one of these five types:
+Classify each evidence quote as exactly one of these four types:
 
 ### `behavioral_evidence`
 Observable actions the teacher witnessed — specific actions, strategies used, choices made, peer interactions, proactive behavior.
@@ -19,18 +19,6 @@ Affect, emotional state, or disposition visible in the text. Only extract emotio
 
 ### `context_marker`
 Setting, conditions, timeframe, constraints, or social configuration that frames the observation. Context markers describe the situation, not the student directly.
-
-### `mastery_signal`
-Indicators of skill level or developmental stage, including improvement trajectories. Statements like "has improved", "is beginning to", "is developing" are extractable — the teacher is reporting an observed change.
-
-Mastery Level:
-Assign one of: `emerging`, `developing`, `proficient`, `exceeding`, or `null`.
-
-- `emerging` — Skill is just appearing ("is beginning to negotiate solutions")
-- `developing` — Skill is growing but not yet consistent ("is developing strong problem-solving skills")
-- `proficient` — Skill is demonstrated reliably ("confidently recognizes letters, says them out loud, and spells them correctly")
-- `exceeding` — Beyond expectations or independently without prompting ("managed to master at least two skills at a 6th- and 7th-grade level of difficulty")
-- `null` — Not applicable (use for `context_marker` signals or when mastery is not indicated)
 
 ### `concern_flag`
 Language indicating risk, regression, or areas needing attention. Raise a concern_flag when the teacher's language indicates a pattern, difficulty, or behavior that may need attention — not every minor challenge. "Needed a bit of help" is NOT a concern flag. "Repeatedly refuses to follow instructions" IS.
@@ -81,9 +69,8 @@ Respond with valid JSON matching this exact schema:
   "signals": [
     {
       "evidence": "exact verbatim quote from observation",
-      "type": "behavioral_evidence | emotional_indicator | context_marker | mastery_signal | concern_flag",
+      "type": "behavioral_evidence | emotional_indicator | context_marker | concern_flag",
       "sel_competencies": ["self_management", "social_awareness", "..."],
-      "mastery_level": "emerging | developing | proficient | exceeding | null",
       "confidence": "high | medium | low"
     }
   ]
@@ -107,42 +94,36 @@ Student count: 1
       "evidence": "During the Tribe Meet",
       "type": "context_marker",
       "sel_competencies": [],
-      "mastery_level": "null",
       "confidence": "high"
     },
     {
       "evidence": "Romeo chose not to join the game we played. This attitude wasn’t new",
       "type": "concern_flag",
       "sel_competencies": [],
-      "mastery_level": "null",
       "confidence": "high"
     },
     {
       "evidence": "after about ten minutes he decided to join",
       "type": "behavioral_evidence",
       "sel_competencies": ["self_management"],
-      "mastery_level": "null",
       "confidence": "high"
     },
     {
       "evidence": "I saw Romeo having fun in the game, and he seemed to enjoy being part of the team.",
       "type": "behavioral_evidence",
       "sel_competencies": ["relationship_skills"],
-      "mastery_level": "null",
       "confidence": "medium"
     },
     {
       "evidence": "He told me that he enjoyed it, but at the beginning he was bored and didn’t want to take part",
       "type": "emotional_indicator",
       "sel_competencies": ["self_awareness"],
-      "mastery_level": "null",
       "confidence": "high"
     },
     {
       "evidence": "His main concern was that he can’t find his own place in the tribe, which makes him feel like he doesn’t like the group",
       "type": "concern_flag",
       "sel_competencies": ["self_awareness", "social_awareness"],
-      "mastery_level": "null",
       "confidence": "high"
     }
   ]
@@ -163,7 +144,6 @@ Student Count: 4
       "evidence": "Good collaboration with all his colleagues on the collaborative paint project",
       "type": "behavioral_evidence",
       "sel_competencies": ["relationship_skills"],
-      "mastery_level": "null",
       "confidence": "low"
     }
   ]
@@ -184,35 +164,30 @@ Student Count: 1
       "evidence": "Jasmine had difficulty grasping the decomposing method at first",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "mastery_level": "null",
       "confidence": "medium"
     },
     {
       "evidence": "she wasn’t fully engaged during the group activity",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "mastery_level": "null",
       "confidence": "medium"
     },
     {
       "evidence": "after one-on-one support, she understood the concept",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "mastery_level": "null",
       "confidence": "medium"
     },
     {
       "evidence": "She was able to decompose numbers from 2 to 6 by herself",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "mastery_level": "null",
       "confidence": "high"
     },
     {
       "evidence": "eventually became frustrated and started crying, saying she \"can’t do hard things.\"",
       "type": "concern_flag",
       "sel_competencies": [],
-      "mastery_level": "null",
       "confidence": "high"
     }
   ]
