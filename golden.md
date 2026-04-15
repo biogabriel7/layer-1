@@ -5,61 +5,150 @@
       "sel_competencies": ["self_management", "social_awareness", "..."],
       "observation_confidence": "high | medium | low"
     }
+    ]
 
-
-## Example 1
+## Example 1 +
 
 **Input**
 Observation: "Good participation today."
 Student Count: 1
 
-## Example 2
+**Output**
+"signals": [
+    {
+      "evidence": ""Good participation today.",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "low"
+    }
+    ]
+
+## Example 2 +
 
 **Input**
 Observation: "No Comment"
 Student Count: 1
 
-## Example 3
+**Output**
+"signals": []
+
+## Example 3 +
 
 **Input**
 Observation: "She was quiet today."
 Student Count: 1
 
-## Example 4
+**Output**
+"signals": [
+    {
+      "evidence": "She was quiet today.",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "medium"
+    }
+    ]
+
+## Example 4 +
 
 **Input**
 Observation: "Refused to participate in any group activities again today."
 Student Count: 1
 
-## Example 5
+**Output**
+"signals": [
+    {
+      "evidence": "Refused to participate in any group activities again today.",
+      "type": "concern_flag",
+      "sel_competencies": ["self_management", "social_awareness", "..."],
+      "observation_confidence": "high"
+    }
+    ]
+
+## Example 5+
 
 **Input**
 Observation: "Did well on the math test."
 Student Count: 1
 
-## Example 6
+**Output**
+"signals": [
+    {
+      "evidence": "Did well on the math test.",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "medium"
+    }
+    ]
+
+## Example 6+
 
 **Input**
 Observation: "Present but did not engage."
 Student Count: 1
 
-## Example 7
+**Output**
+"signals": [
+    {
+      "evidence": "Present but did not engage.",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "low"
+    }
+    ]
+
+
+## Example 7+
 
 **Input**
 Observation: "N/A"
 Student Count: 1
 
-## Example 8
+**Output**
+"signals": []
+
+## Example 8+
 
 **Input**
 Observation: "Her commitment to collaborative learning is evident in her active participation and willingness to engage with peers."
 Student Count: 4
 
-## Example 9
+**Output**
+"signals": [
+    {
+      "evidence": ""Good collaboration with all his colleagues on the collaborative paint project",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["relationship_skills"],
+      "observation_confidence": "medium"
+    }
+    ]
+
+## Example 9+
 
 **Input**
 Observation: "During the group science project, they worked together to build a model volcano. They divided tasks among themselves and communicated effectively about who would handle each part. One student took the lead in mixing the ingredients while others shaped the structure."
 Student Count: 4
+
+**Output**
+"signals": [
+    {
+      "evidence": "During the group science project, they worked together to build a model volcano",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "They divided tasks among themselves and communicated effectively about who would handle each part",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["relationship_skills"],
+      "observation_confidence": "medium"
+    },
+    {
+      "evidence": "One student took the lead in mixing the ingredients while others shaped the structure",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["relationship_skills"],
+      "observation_confidence": "medium"
+    },
+    ]
 
 ## Example 10
 
