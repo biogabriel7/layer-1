@@ -1078,6 +1078,81 @@ def _write_pie(name: str, title: str, labels: list[str], values: list[float]) ->
     return f"![{title}]({rel})"
 
 
+def _bar_svg(
+    title: str,
+    labels: list[str],
+    values: list[float],
+    value_fmt: str = "{:.2f}",
+    subtitle: str = "",
+) -> str:
+    """Simple vertical bar chart for side-by-side comparisons."""
+    width, height = 540, 320
+    parts: list[str] = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
+        f'font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">',
+        f'<text x="{width // 2}" y="28" text-anchor="middle" '
+        f'font-size="16" font-weight="600">{_xml_escape(title)}</text>',
+    ]
+    if subtitle:
+        parts.append(
+            f'<text x="{width // 2}" y="48" text-anchor="middle" '
+            f'font-size="12" fill="#666">{_xml_escape(subtitle)}</text>'
+        )
+
+    peak = max(values, default=1.0)
+    if peak <= 0:
+        peak = 1.0
+
+    chart_top, chart_bottom = 72, 260
+    chart_h = chart_bottom - chart_top
+    bar_w, gap = 90, 60
+    n = len(values)
+    total_w = n * bar_w + max(n - 1, 0) * gap
+    start_x = (width - total_w) // 2
+
+    for i, (lbl, val) in enumerate(zip(labels, values)):
+        x = start_x + i * (bar_w + gap)
+        h = (val / peak) * chart_h if val > 0 else 0
+        y = chart_bottom - h
+        color = PIE_PALETTE[i % len(PIE_PALETTE)]
+        parts.append(
+            f'<rect x="{x}" y="{y:.1f}" width="{bar_w}" height="{h:.1f}" '
+            f'fill="{color}"/>'
+        )
+        parts.append(
+            f'<text x="{x + bar_w // 2}" y="{max(y - 8, chart_top - 4):.1f}" '
+            f'text-anchor="middle" font-size="14" font-weight="600" fill="#222">'
+            f'{_xml_escape(value_fmt.format(val))}</text>'
+        )
+        parts.append(
+            f'<text x="{x + bar_w // 2}" y="{chart_bottom + 22}" text-anchor="middle" '
+            f'font-size="13" fill="#222">{_xml_escape(lbl)}</text>'
+        )
+
+    parts.append(
+        f'<line x1="{start_x - 10}" y1="{chart_bottom}" '
+        f'x2="{start_x + total_w + 10}" y2="{chart_bottom}" '
+        f'stroke="#888" stroke-width="1"/>'
+    )
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+
+def _write_bar(
+    name: str,
+    title: str,
+    labels: list[str],
+    values: list[float],
+    value_fmt: str = "{:.2f}",
+    subtitle: str = "",
+) -> str:
+    CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+    path = CHARTS_DIR / f"{name}.svg"
+    path.write_text(_bar_svg(title, labels, values, value_fmt, subtitle))
+    rel = path.relative_to(SUMMARY_PATH.parent).as_posix()
+    return f"![{title}]({rel})"
+
+
 def _compare_bar_table(
     title: str,
     labels: list[str],
@@ -1194,6 +1269,33 @@ def write_summary(
         "Predicted", predicted_values,
     )
 
+    # Avg concern_flag signals per observation, over observations where either
+    # golden or predicted flagged ≥1 concern. Shared denominator keeps the two
+    # bars apples-to-apples.
+    concern_n = 0
+    g_concern_sum = 0
+    p_concern_sum = 0
+    for r in results:
+        gold = golden_by_key.get(r.cache_key)
+        if gold is None:
+            continue
+        g = sum(1 for s in gold.signals if s.type == "concern_flag")
+        p = sum(1 for s in r.signals if s.type == "concern_flag")
+        if g >= 1 or p >= 1:
+            concern_n += 1
+            g_concern_sum += g
+            p_concern_sum += p
+    if concern_n > 0:
+        concern_chart = _write_bar(
+            "concern_flag_average",
+            "Avg Concern Flags per Observation",
+            ["Golden", "Predicted"],
+            [g_concern_sum / concern_n, p_concern_sum / concern_n],
+            subtitle=f"n={concern_n} observations with ≥1 concern_flag",
+        )
+    else:
+        concern_chart = "_No observations with concern_flag signals._"
+
     obs_ind = dist["obs_type_counts"].get("individual", 0)
     obs_grp = dist["obs_type_counts"].get("group", 0)
     total_signals = sum(dist["type_counts"].values())
@@ -1246,6 +1348,10 @@ _Generated {timestamp} — scope: {scope_desc}_
 ## Golden vs Predicted
 
 {compare_chart}
+
+## Concern Flag Rate
+
+{concern_chart}
 {divergent_section}"""
     SUMMARY_PATH.write_text(body)
 

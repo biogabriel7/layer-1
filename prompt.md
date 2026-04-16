@@ -54,6 +54,7 @@ Confidence reflects how specific and observable the evidence is — concrete act
    - A single coherent action across multiple clauses is one unit ("She walked over to the new student and introduced herself").
    - A sentence describing multiple distinct skills, subjects, or moments is multiple units — split it ("He wrote a paragraph and spelled every word correctly" → two signals).
    - A pattern plus its supporting incident is one unit when merging preserves the escalation or causal structure that gives the signal its meaning. This applies especially to concern_flag, where a full multi-sentence observation can be a single signal.
+   - **Concern_flag default: merge, don't split.** A concern is a pattern, not a list of behaviors. When a teacher describes a sequence of behaviors within one incident or session, or a standing pattern paired with today's instance, extract them as ONE concern_flag. The cumulative escalation is the signal — splitting fragments the pattern and loses its weight. Each behavior in isolation may not even meet the concern threshold; their combined arc is what makes it flaggable. Only split when the teacher describes two clearly unrelated concerns (e.g., an academic regression AND an unrelated peer-conflict pattern). When in doubt, merge. See Example 4 for an escalation sequence that must be kept as a single concern_flag.
    - Tie-breaker: if splitting removes context needed to classify type or confidence, keep merged. If merging hides a distinct second signal, split.
 3. **Observable over evaluative**: When the teacher pairs a judgment ("showed leadership", "demonstrated curiosity") with a concrete action describing the same moment, extract only the action. Judgments are interpretation; actions are evidence. Exception: if the evaluative phrase reports the student's own expressed feeling ("he said he felt proud"), keep it as emotional_indicator.
 4. **No inference beyond text**: Extract only what the teacher explicitly wrote. Never infer diagnoses, home life, character judgments, or conditions not stated.
@@ -220,3 +221,77 @@ Student Count: 1
   ]
 }
 ```
+
+### Example 4: Escalation within a single session — DO NOT split into multiple concern_flags
+
+This example teaches the `concern_flag` merge-first default from Rule 2. The three in-session behaviors (tearing, throwing, disengaging) form one escalation triggered by a single source, and the trailing pattern statement is the recurrence qualifier for today's incident — not a separate concern. Extract all of it as ONE concern_flag.
+
+**Input**
+Observation: "Today during math rotations, Leo tore up his worksheet when he couldn't solve a problem, threw his pencil across the table, and put his head down for the rest of the rotation. He has been increasingly frustrated with math over the past two weeks."
+
+Student count: 1
+
+**Output (correct — 2 signals total)**
+```json
+{
+  "signals": [
+    {
+      "evidence": "Today during math rotations",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high",
+      "reasoning": "Type: context_marker because 'Today during math rotations' identifies the time and activity framing the observation — it describes the setting, not a student action or emotion. Competencies: none, because context markers describe circumstances, not student-demonstrated skills. Confidence: high because the teacher explicitly and unambiguously names the specific time and activity."
+    },
+    {
+      "evidence": "Leo tore up his worksheet when he couldn't solve a problem, threw his pencil across the table, and put his head down for the rest of the rotation. He has been increasingly frustrated with math over the past two weeks.",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high",
+      "reasoning": "Type: concern_flag because the within-session escalation (tearing worksheet → throwing pencil → head down for the rest of the rotation) combined with the explicit standing pattern ('increasingly frustrated... over the past two weeks') indicates a sustained emotional-regulation difficulty that warrants attention. Competencies: none, because the behaviors reflect a deficit in self_management rather than a demonstrated SEL skill — we map competencies to skills the student demonstrated, not skills they failed to show. Confidence: high because the teacher describes three specific, directly observed behaviors with a clear trigger ('when he couldn't solve a problem') and provides a concrete timeframe for the pattern ('over the past two weeks'), leaving no ambiguity. Signal boundary: the three in-session behaviors are merged with the pattern statement because they form a single escalation episode triggered by one source, and 'increasingly frustrated... over the past two weeks' qualifies today's episode as part of an ongoing trajectory — separating them would leave the pattern floating without its supporting incident and each behavior floating without the cumulative arc that makes it a concern. In isolation 'threw his pencil across the table' is borderline for meeting the concern threshold; the combined sequence is what makes this clearly flaggable. Concern threshold: tearing a worksheet, throwing a pencil, and disengaging for the rest of the rotation together indicate emotional overwhelm beyond a routine frustration moment, and 'increasingly frustrated... over the past two weeks' explicitly marks this as a worsening pattern rather than an off-day — the combination clearly crosses from a minor challenge into a flaggable concern."
+    }
+  ]
+}
+```
+
+**Anti-pattern (INCORRECT — do NOT split like this)**
+
+The output below over-splits the same observation into five signals. This is the failure mode the concern_flag merge-first default exists to prevent. Do NOT emit output in this shape:
+
+```json
+{
+  "signals": [
+    {
+      "evidence": "Today during math rotations",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "Leo tore up his worksheet when he couldn't solve a problem",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "threw his pencil across the table",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "put his head down for the rest of the rotation",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He has been increasingly frustrated with math over the past two weeks",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+}
+```
+
+Why this output is wrong: (a) tearing, throwing, and disengaging are a single escalation chain with a shared trigger ("when he couldn't solve a problem") — splitting fragments the escalation that gives the concern its weight; (b) "increasingly frustrated... over the past two weeks" is the recurrence qualifier for today's incident, not a standalone concern — separating it disconnects today's episode from the pattern that elevates it above routine frustration; (c) "threw his pencil across the table" in isolation is a single disruptive act that barely meets the concern threshold, but combined with the surrounding behaviors and the two-week pattern it clearly crosses it. The correct output merges all four concern fragments into one concern_flag, per Rule 2.
