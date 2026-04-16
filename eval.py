@@ -44,8 +44,9 @@ GOLDEN_PATH = Path("golden.md")
 JUDGE_PROMPT_PATH = Path("judge_prompt.md")
 RUBRIC_PATH = Path("prompt.md")
 REASONING_EVAL_DIR = Path("reasoning_eval")
-SUMMARY_PATH = Path("summary.md")
-CHARTS_DIR = Path("charts")
+MEETINGS_DIR = Path("meetings")
+SUMMARY_PATH = MEETINGS_DIR / "summary.md"
+CHARTS_DIR = MEETINGS_DIR / "charts"
 JUDGE_MODEL = "anthropic/claude-sonnet-4-6"
 
 VALID_TYPES = {
@@ -1054,11 +1055,13 @@ def _pie_svg(title: str, labels: list[str], values: list[float]) -> str:
 
 
 def _write_pie(name: str, title: str, labels: list[str], values: list[float]) -> str:
-    """Write a pie chart SVG to charts/ and return a Markdown image reference."""
-    CHARTS_DIR.mkdir(exist_ok=True)
+    """Write a pie chart SVG to meetings/charts/ and return a Markdown image
+    reference that is relative to SUMMARY_PATH (which also lives in meetings/)."""
+    CHARTS_DIR.mkdir(parents=True, exist_ok=True)
     path = CHARTS_DIR / f"{name}.svg"
     path.write_text(_pie_svg(title, labels, values))
-    return f"![{title}]({path.as_posix()})"
+    rel = path.relative_to(SUMMARY_PATH.parent).as_posix()
+    return f"![{title}]({rel})"
 
 
 def _compare_bar_table(
