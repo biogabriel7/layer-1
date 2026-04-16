@@ -8,7 +8,7 @@
   ]
 
 
-## Example 1 +
+## Example 1
 
 **Input**
 Observation: "Good participation today."
@@ -24,7 +24,7 @@ Student Count: 1
     }
   ]
 
-## Example 2 +
+## Example 2
 
 **Input**
 Observation: "No Comment"
@@ -33,7 +33,7 @@ Student Count: 1
 **Output**
 "signals": []
 
-## Example 3 +
+## Example 3
 
 **Input**
 Observation: "She was quiet today."
@@ -49,7 +49,7 @@ Student Count: 1
     }
   ]
 
-## Example 4 +
+## Example 4
 
 **Input**
 Observation: "Refused to participate in any group activities again today."
@@ -65,7 +65,7 @@ Student Count: 1
     }
   ]
 
-## Example 5+
+## Example 5
 
 **Input**
 Observation: "Did well on the math test."
@@ -81,7 +81,7 @@ Student Count: 1
     }
   ]
 
-## Example 6+
+## Example 6
 
 **Input**
 Observation: "Present but did not engage."
@@ -98,7 +98,7 @@ Student Count: 1
   ]
 
 
-## Example 7+
+## Example 7
 
 **Input**
 Observation: "N/A"
@@ -107,7 +107,7 @@ Student Count: 1
 **Output**
 "signals": []
 
-## Example 8+
+## Example 8
 
 **Input**
 Observation: "Good collaboration with all his colleagues on the collaborative paint project"
@@ -123,7 +123,7 @@ Student Count: 4
     }
   ]
 
-## Example 9+
+## Example 9
 
 **Input**
 Observation: "During the group science project, they worked together to build a model volcano. They divided tasks among themselves and communicated effectively about who would handle each part. One student took the lead in mixing the ingredients while others shaped the structure."
@@ -163,7 +163,7 @@ Student Count: 1
 Observation: "Jasmine had difficulty grasping the decomposing method at first, as she wasn't fully engaged during the group activity. However, after one-on-one support, she understood the concept. She was able to decompose numbers from 2 to 6 by herself but eventually became frustrated and started crying, saying she ""can't do hard things."" She tends to get discouraged easily when working alone and needs encouragement to build resilience and confidence in tackling challenges."
 Student Count: 1
 
-## Example 12+
+## Example 12
 
 **Input**
 Observation: "He completed all ten multiplication problems correctly and finished before the time limit. He showed his work clearly on each problem using the standard algorithm."
@@ -185,7 +185,7 @@ Student Count: 1
     }
   ]
 
-## Example 13+
+## Example 13
 
 **Input**
 Observation: "She read the passage aloud with proper intonation and paused at punctuation marks. She answered three out of four comprehension questions correctly."
@@ -207,7 +207,7 @@ Student Count: 1
     }
   ]
 
-## Example 14+
+## Example 14
 
 **Input**
 Observation: "He identified all the continents on the map without assistance and correctly labeled the oceans. He is beginning to understand longitude and latitude coordinates."
@@ -229,7 +229,7 @@ Student Count: 1
     }
   ]
 
-## Example 15+
+## Example 15
 
 **Input**
 Observation: "She sorted the shapes into categories by number of sides and correctly identified triangles, quadrilaterals, and pentagons. She needed guidance to distinguish between regular and irregular polygons."
@@ -257,7 +257,7 @@ Student Count: 1
     }
   ]
 
-## Example 16+
+## Example 16
 
 **Input**
 Observation: "He wrote a complete paragraph with a topic sentence, three supporting details, and a concluding sentence. His spelling was accurate and he used punctuation correctly throughout."
@@ -279,7 +279,7 @@ Student Count: 1
     }
   ]
 
-## Example 17+
+## Example 17
 
 **Input**
 Observation: "Marcus has been consistently late to class for the past two weeks. When he arrives, he often puts his head down on the desk and does not respond when called on. Today he refused to open his notebook and said he doesn't care about the assignment."
@@ -301,7 +301,7 @@ Student Count: 1
     }
   ]
 
-## Example 18+
+## Example 18
 
 **Input**
 Observation: "During recess, Lily sat alone on the bench and cried when another student approached her. She said she has no friends and nobody wants to play with her. This is the third time this week she has isolated herself during free time."
@@ -323,7 +323,7 @@ Student Count: 1
     }
   ]
 
-## Example 19+
+## Example 19
 
 **Input**
 Observation: "Ethan pushed another student out of line during lunch and then argued loudly with the teacher when asked to apologize. He kicked a chair on the way to his seat. Later, he told me he was angry because someone took his spot."
@@ -345,7 +345,7 @@ Student Count: 1
     }
   ]
 
-## Example 20+
+## Example 20
 
 **Input**
 Observation: "Her reading level has dropped from Level M to Level J since the beginning of the semester. She avoids reading aloud and frequently says she hates reading. During independent reading time she flips through pages without actually reading."
@@ -361,7 +361,7 @@ Student Count: 1
     },
   ]
 
-## Example 21+
+## Example 21
 
 **Input**
 Observation: "Before every test, Sofia asks to go to the bathroom multiple times and complains of stomach aches. Today she started shaking her hands and breathing rapidly when I distributed the papers. She managed to complete the test but only after I sat with her for the first five minutes."
@@ -406,7 +406,7 @@ Student Count: 1
   ]
 
 
-## Example 23+
+## Example 23
 
 **Input**
 Observation: "Aiden has stopped raising his hand in class entirely. He used to be one of the most active participants but now stares at his desk. When I asked him privately if something was wrong, he shrugged and said everything is fine."
@@ -428,7 +428,7 @@ Student Count: 1
     }
   ]
 
-## Example 24+
+## Example 24
 
 **Input**
 Observation: "During circle time, Mia repeatedly interrupted other students and could not sit still. She left her spot four times without permission and knocked over another student's water bottle. She apologized each time but continued the behavior."
@@ -450,7 +450,7 @@ Student Count: 1
     },
   ]
 
-## Example 25+
+## Example 25
 
 **Input**
 Observation: "The crew worked together on a mural project. They discussed color choices democratically and took turns painting different sections. When one member accidentally smudged another's section, they resolved it calmly by offering to help fix it."
@@ -478,7 +478,7 @@ Student Count: 6
     }
   ]
 
-## Example 26+
+## Example 26
 
 **Input**
 Observation: "During our exploration of the sense of smell, they actively participated in a sensory activity where they matched different scents to corresponding cards, strengthening their observation and identification skills. They also enjoyed creating a model ""nose"" using condiments of their choice, thoughtfully selecting scents based on personal preference. Through discussion, they developed an understanding of the close connection between smell and taste and how the absence of one sense can influence overall sensory experience."
@@ -500,7 +500,7 @@ Student Count: 21
     }
   ]
 
-## Example 27+
+## Example 27
 
 **Input**
 Observation: "Throughout the week we played a game where the Lower Middle crew split into different teams. We exercised strategic thinking, patience, following the rules, collaboration with teammates. Most students told me that the game was fun and exciting, but some said it was stressful and intense. Overall, the Lower Middle showed that they can collaborate and compete without getting upset."
@@ -522,7 +522,7 @@ Student Count: 15
     }
   ]
 
-## Example 28+
+## Example 28
 
 **Input**
 Observation: "Crew Meet was a great opportunity to practice focus skills with the Upper Primary crew. We played a game called ""Hocus Pocus, Everybody Focus."" From my perspective, the children were more focused than last week. All members of the crew participated, and at the end they told me that the game was both playful and useful. Together, we acknowledged that focus is an important skill that helps us beyond school."
@@ -556,7 +556,7 @@ Student Count: 15
     }
   ]
 
-## Example 29+
+## Example 29
 
 **Input**
 Observation: "Today in class they were exploring equivalent fractions with coloured blocks and applying their findings to answer questions related to equivalent fractions."
@@ -572,7 +572,7 @@ Student Count: 14
     }
   ]
 
-## Example 30+
+## Example 30
 
 **Input**
 Observation: "Today the Upper Primary Crew exercised their independent learning skills when working together analysing data that compared food waste per capita in various countries around the world. They needed to apply their knowledge of fractions, and apply basic numeracy skills to a real world context effectively."
@@ -588,7 +588,7 @@ Student Count: 13
     }
   ]
 
-## Example 31+
+## Example 31
 
 **Input**
 Observation: "The learners from the upper primary crew were deeply engaged in exploring even and odd numbers through play. By using body movements and Lego blocks, they successfully identified even and odd patterns and discovered the rules for adding and subtracting even and odd numbers. They remained fully present, enthusiastic, and eager to delve deeper into their mathematical discoveries."
@@ -616,7 +616,7 @@ Student Count: 12
     }
   ]
 
-## Example 32+
+## Example 32
 
 **Input**
 Observation: "During the folder-making activity, the learners were engaged and showed great interest. They were able to give and receive constructive feedback, felt happy to share with their classmates, and were proud to present their work to their peers."
@@ -644,7 +644,7 @@ Student Count: 12
     }
   ]
 
-## Example 33+
+## Example 33
 
 **Input**
 Observation: "Elena participated enthusiastically in the art project and created a beautiful watercolor painting. However, when it was time to clean up, she refused to help and left her supplies on the table. She also told another student that their painting looked ugly, which made the other student cry."
@@ -678,7 +678,7 @@ Student Count: 1
     }
   ]
 
-## Example 34+
+## Example 34
 
 **Input**
 Observation: "Oscar showed great initiative by volunteering to be the group leader for the history project. He organized the research materials and assigned roles to each team member. However, he became frustrated when his teammates suggested changes to his plan and dismissed their ideas without listening. By the end of the session, he acknowledged that he should have been more open to others' suggestions."
@@ -718,7 +718,7 @@ Student Count: 1
     }
   ]
 
-## Example 35+
+## Example 35
 
 **Input**
 Observation: "Priya excelled in the math assessment, scoring 100% on the fractions unit test. She helped two classmates who were struggling with the concept. Later in the day, however, she got into a verbal argument with a classmate during PE and refused to participate for the rest of the period."
@@ -746,7 +746,7 @@ Student Count: 1
     }
   ]
 
-## Example 36+
+## Example 36
 
 **Input**
 Observation: "James made excellent progress on his writing assignment and produced a well-structured essay with a clear thesis. He was focused and productive during the first half of class. After the break, though, he kept distracting his neighbor by talking and had to be moved to a different seat twice."
@@ -774,7 +774,7 @@ Student Count: 1
     }
   ]
 
-## Example 37+
+## Example 37
 
 **Input**
 Observation: "Zara showed strong leadership during the group debate, presenting her arguments clearly and respectfully. She listened to opposing viewpoints and asked thoughtful follow-up questions. However, when her team lost the debate, she blamed her teammates publicly and said they didn't prepare enough."
@@ -808,7 +808,7 @@ Student Count: 1
     }
   ]
 
-## Example 38+
+## Example 38
 
 **Input**
 Observation: "During the outdoor education session at the nature reserve, Kai demonstrated exceptional curiosity by asking questions about every plant species we encountered. He carefully sketched three different leaf shapes in his journal and labeled them correctly. He shared his magnifying glass with a classmate who had forgotten theirs and explained how to use it properly. When we reached the stream crossing, he hesitated but encouraged himself by saying 'I can do this' before stepping across. He then turned around and offered his hand to help the next student across. At the end of the trip, he told me it was the best day of school ever."
@@ -866,7 +866,7 @@ Student Count: 1
     }
   ]
 
-## Example 39+
+## Example 39
 
 **Input**
 Observation: "In today's creative writing workshop, Amara chose to write a story about a girl who overcomes her fear of public speaking. She spent extra time planning her story structure before writing. Her narrative included vivid descriptions and dialogue that showed character development. She voluntarily read her story aloud to the class, which is something she has never done before. After reading, she accepted feedback from her peers gracefully and even thanked a classmate who pointed out a spelling error. She told me she felt proud of herself for reading out loud."
@@ -918,7 +918,7 @@ Student Count: 1
     }
   ]
 
-## Example 40+
+## Example 40
 
 **Input**
 Observation: "During the science fair preparation, Leo designed his experiment independently, created a hypothesis, set up the materials, and recorded his observations systematically. He explained his findings to visitors using scientific vocabulary. He also helped a younger student set up their display board."
@@ -952,7 +952,7 @@ Student Count: 1
     }
   ]
 
-## Example 41+
+## Example 41
 
 **Input**
 Observation: "During the cooking session, Tomas followed the recipe step by step without needing prompts. He measured the ingredients accurately using cups and spoons. He waited patiently for his turn to use the mixer. When a classmate spilled flour, he immediately grabbed a cloth and helped clean it up without being asked. He tasted the final product and said it was 'the best thing I ever made.' He suggested we should do cooking more often and even asked if he could take the recipe home to make it with his family."
