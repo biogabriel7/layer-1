@@ -137,6 +137,8 @@ def process_row(
     result = postprocess({"signals": signals}, student_count)
 
     output = {
+        "observation": observation,
+        "student_count": student_count,
         "signals": result["signals"],
         "observation_type": result["observation_type"],
         "signal_count": result["signal_count"],
