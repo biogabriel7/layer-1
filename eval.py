@@ -736,6 +736,93 @@ def aggregate_reasoning(judgements: Iterable[ObservationJudgement]) -> Reasoning
     return m
 
 
+def _divergence_score(gc: GoldenComparison) -> int:
+    """Heuristic rank of how far predicted drifted from golden.
+
+    model_wrong is the most informative signal for extractor improvement, so
+    it weighs most. golden_wrong means the rubric supports the model, so
+    surface it too but with less weight."""
+    score = 0
+    for d in gc.differences:
+        if d.verdict == "model_wrong":
+            score += 3
+        elif d.verdict == "ambiguous":
+            score += 2
+        else:  # golden_wrong
+            score += 1
+    return score
+
+
+def _format_divergent_examples(
+    rm: ReasoningMetrics,
+    results_by_key: dict[str, ResultFile],
+    golden_by_key: dict[str, GoldenExample],
+    max_n: int = 10,
+) -> str:
+    """Markdown block showing the top-N observations where predicted and
+    golden extractions diverge most. Each example includes the observation
+    text, judge differences, and predicted vs. golden signals side by side.
+    """
+    ranked = [(k, gc) for k, gc in rm.gc_entries if gc.differences]
+    if not ranked:
+        return ""
+    ranked.sort(key=lambda entry: _divergence_score(entry[1]), reverse=True)
+
+    lines: list[str] = []
+    shown = 0
+    for key, gc in ranked:
+        if shown >= max_n:
+            break
+        result = results_by_key.get(key)
+        golden = golden_by_key.get(key)
+        if result is None or golden is None:
+            continue
+        shown += 1
+
+        obs = result.observation
+        if len(obs) > 500:
+            obs = obs[:497] + "..."
+
+        lines.append(f"### Example {shown}: `{key[:12]}`")
+        lines.append("")
+        if gc.summary:
+            lines.append(f"_{gc.summary}_")
+            lines.append("")
+        lines.append(f"**Observation** (student_count={result.student_count}):")
+        lines.append("")
+        lines.append(f"> {obs}")
+        lines.append("")
+        lines.append("**Differences:**")
+        lines.append("")
+        for d in gc.differences:
+            tag = d.verdict.upper().replace("_", " ")
+            rule = f" — _{d.rubric_rule}_" if d.rubric_rule else ""
+            lines.append(f"- **{tag}**{rule}: {d.description}")
+            if d.likely_cause:
+                lines.append(f"  - _why:_ {d.likely_cause}")
+        lines.append("")
+        lines.append(f"**Predicted signals ({len(result.signals)}):**")
+        for s in result.signals:
+            ev = s.evidence if len(s.evidence) <= 140 else s.evidence[:137] + "..."
+            lines.append(f"- `{s.type}` — {ev}")
+        lines.append("")
+        lines.append(f"**Golden signals ({len(golden.signals)}):**")
+        for s in golden.signals:
+            ev = s.evidence if len(s.evidence) <= 140 else s.evidence[:137] + "..."
+            lines.append(f"- `{s.type}` — {ev}")
+        lines.append("")
+
+    if not lines:
+        return ""
+
+    remaining = len(ranked) - shown
+    if remaining > 0:
+        lines.append(f"_...and {remaining} more observations with differences._")
+        lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
 def _format_golden_comparison(m: ReasoningMetrics, max_entries: int = 20) -> str:
     """Human-readable golden-comparison block for the terminal and summary.md.
 
@@ -1041,6 +1128,7 @@ def write_summary(
 ) -> None:
     """Render summary.md with eval metrics + pie charts + golden comparison."""
     dist = _distributions(results)
+    results_by_key = {r.cache_key: r for r in results}
 
     # Signal type distribution (pie)
     type_order = ["behavioral_evidence", "emotional_indicator",
@@ -1098,6 +1186,21 @@ def write_summary(
         f"**{len(results)} observations scored · {total_signals} signals extracted · "
         f"{obs_ind} individual / {obs_grp} group**"
     )
+
+    divergent_section = ""
+    if reasoning is not None:
+        examples = _format_divergent_examples(
+            reasoning, results_by_key, golden_by_key,
+        )
+        if examples:
+            divergent_section = (
+                "\n## Divergent Extractions\n\n"
+                "_Top observations where predicted and golden signals diverge most, "
+                "ranked by the reasoning judge's weighted verdict counts "
+                "(model_wrong=3, ambiguous=2, golden_wrong=1)._\n\n"
+                f"{examples}"
+            )
+
     body = f"""# Layer 1 Evaluation Summary
 
 _Generated {timestamp} — scope: {scope_desc}_
@@ -1125,7 +1228,7 @@ _Generated {timestamp} — scope: {scope_desc}_
 ## Golden vs Predicted
 
 {compare_chart}
-"""
+{divergent_section}"""
     SUMMARY_PATH.write_text(body)
 
 
