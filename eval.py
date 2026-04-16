@@ -426,47 +426,86 @@ def verdict(rate: float, target: float, floor: float) -> str:
     return "FAIL"
 
 
-def report(m: Metrics, show_failures: bool) -> None:
-    eg = pct(m.eg_passed, m.eg_total)
-    ot = pct(m.ot_passed, m.ot_total)
-    recall = pct(m.golden_signals_matched, m.golden_signals_total)
-    precision = pct(m.predicted_signals_matched, m.predicted_signals_total)
-    type_acc = pct(m.type_matches, m.type_total)
+_RowList = list[tuple[str, float, tuple[float, float], str]]
 
-    rows: list[tuple[str, float, tuple[float, float], str]] = [
-        ("Evidence Grounding", eg, TARGETS["evidence_grounding"],
-         f"{m.eg_passed}/{m.eg_total} signals"),
-        ("Observation Type", ot, TARGETS["observation_type"],
-         f"{m.ot_passed}/{m.ot_total} observations"),
-        ("Signal Completeness (recall)", recall, TARGETS["signal_completeness"],
+
+def _metrics_rows(m: Metrics) -> _RowList:
+    return [
+        ("Evidence Grounding", pct(m.eg_passed, m.eg_total),
+         TARGETS["evidence_grounding"], f"{m.eg_passed}/{m.eg_total} signals"),
+        ("Observation Type", pct(m.ot_passed, m.ot_total),
+         TARGETS["observation_type"], f"{m.ot_passed}/{m.ot_total} observations"),
+        ("Signal Completeness (recall)",
+         pct(m.golden_signals_matched, m.golden_signals_total),
+         TARGETS["signal_completeness"],
          f"{m.golden_signals_matched}/{m.golden_signals_total} golden signals"),
-        ("No Hallucinated Signals (precision)", precision,
+        ("No Hallucinated Signals (precision)",
+         pct(m.predicted_signals_matched, m.predicted_signals_total),
          TARGETS["no_hallucinated_signals"],
          f"{m.predicted_signals_matched}/{m.predicted_signals_total} predicted signals"),
-        ("Type Accuracy", type_acc, TARGETS["type_accuracy"],
-         f"{m.type_matches}/{m.type_total} matched pairs"),
+        ("Type Accuracy", pct(m.type_matches, m.type_total),
+         TARGETS["type_accuracy"], f"{m.type_matches}/{m.type_total} matched pairs"),
     ]
 
-    print()
-    print(f"{'Dimension':<40} {'Rate':>8} {'Target':>8} {'Floor':>8}  Result  Detail")
-    print("-" * 110)
+
+def _reasoning_rows(rm: ReasoningMetrics) -> _RowList:
+    return [
+        ("Reasoning matches answer",
+         pct(rm.signals_passed, rm.signals_total),
+         REASONING_TARGET,
+         f"{rm.signals_passed}/{rm.signals_total} signals"),
+    ]
+
+
+def _format_table(rows: _RowList) -> str:
+    lines = [
+        f"{'Dimension':<40} {'Rate':>8} {'Target':>8} {'Floor':>8}  Result  Detail",
+        "-" * 110,
+    ]
     for name, rate, (target, floor), detail in rows:
         v = verdict(rate, target, floor)
-        print(
+        lines.append(
             f"{name:<40} {rate*100:>7.1f}% {target*100:>7.0f}% {floor*100:>7.0f}%"
             f"  {v:<6}  {detail}"
         )
+    return "\n".join(lines)
 
+
+def _format_eg_failures(m: Metrics, max_n: int = 20) -> str:
+    if not m.eg_failures:
+        return ""
+    lines = [f"Evidence grounding failures (first {max_n}):"]
+    for key, ev in m.eg_failures[:max_n]:
+        snippet = ev if len(ev) <= 100 else ev[:97] + "..."
+        lines.append(f"  {key[:12]}  {snippet!r}")
+    if len(m.eg_failures) > max_n:
+        lines.append(f"  ...and {len(m.eg_failures) - max_n} more")
+    return "\n".join(lines)
+
+
+def _format_reasoning_failures(rm: ReasoningMetrics, max_n: int = 20) -> str:
+    if not rm.failures:
+        return ""
+    lines = [f"Flagged signals (first {max_n}):"]
+    for key, snippet, note in rm.failures[:max_n]:
+        note_snip = note if len(note) <= 80 else note[:77] + "..."
+        lines.append(f"  {key[:12]}  {snippet!r}  → {note_snip}")
+    if len(rm.failures) > max_n:
+        lines.append(f"  ...and {len(rm.failures) - max_n} more")
+    return "\n".join(lines)
+
+
+def report(m: Metrics, show_failures: bool) -> None:
+    print()
+    print(_format_table(_metrics_rows(m)))
     print()
     print(f"Golden-annotated observations scored: {m.golden_observations}")
 
-    if show_failures and m.eg_failures:
-        print("\nEvidence grounding failures (first 20):")
-        for key, ev in m.eg_failures[:20]:
-            snippet = ev if len(ev) <= 100 else ev[:97] + "..."
-            print(f"  {key[:12]}  {snippet!r}")
-        if len(m.eg_failures) > 20:
-            print(f"  ...and {len(m.eg_failures) - 20} more")
+    if show_failures:
+        failures = _format_eg_failures(m)
+        if failures:
+            print()
+            print(failures)
 
 
 # ---------------------------------------------------------------------------
@@ -611,27 +650,15 @@ def aggregate_reasoning(judgements: Iterable[ObservationJudgement]) -> Reasoning
 
 
 def report_reasoning(m: ReasoningMetrics, show_failures: bool) -> None:
-    rate = pct(m.signals_passed, m.signals_total)
-    target, floor = REASONING_TARGET
-    detail = f"{m.signals_passed}/{m.signals_total} signals"
-
     print()
     print(f"Reasoning Audit (N={m.obs_total} observations)")
-    print(f"{'Dimension':<40} {'Rate':>8} {'Target':>8} {'Floor':>8}  Result  Detail")
-    print("-" * 110)
-    v = verdict(rate, target, floor)
-    print(
-        f"{'Reasoning matches answer':<40} {rate*100:>7.1f}% {target*100:>7.0f}% {floor*100:>7.0f}%"
-        f"  {v:<6}  {detail}"
-    )
+    print(_format_table(_reasoning_rows(m)))
 
-    if show_failures and m.failures:
-        print("\nFlagged signals (first 20):")
-        for key, snippet, note in m.failures[:20]:
-            note_snip = note if len(note) <= 80 else note[:77] + "..."
-            print(f"  {key[:12]}  {snippet!r}  → {note_snip}")
-        if len(m.failures) > 20:
-            print(f"  ...and {len(m.failures) - 20} more")
+    if show_failures:
+        failures = _format_reasoning_failures(m)
+        if failures:
+            print()
+            print(failures)
 
 
 def run_reasoning_audit(
@@ -759,42 +786,32 @@ def _mermaid_bar(
     )
 
 
-def _metrics_table(m: Metrics, reasoning: ReasoningMetrics | None) -> str:
-    rows: list[tuple[str, float, tuple[float, float], str]] = [
-        ("Evidence Grounding", pct(m.eg_passed, m.eg_total),
-         TARGETS["evidence_grounding"],
-         f"{m.eg_passed}/{m.eg_total} signals"),
-        ("Observation Type", pct(m.ot_passed, m.ot_total),
-         TARGETS["observation_type"],
-         f"{m.ot_passed}/{m.ot_total} observations"),
-        ("Signal Completeness (recall)",
-         pct(m.golden_signals_matched, m.golden_signals_total),
-         TARGETS["signal_completeness"],
-         f"{m.golden_signals_matched}/{m.golden_signals_total} golden signals"),
-        ("No Hallucinated Signals (precision)",
-         pct(m.predicted_signals_matched, m.predicted_signals_total),
-         TARGETS["no_hallucinated_signals"],
-         f"{m.predicted_signals_matched}/{m.predicted_signals_total} predicted"),
-        ("Type Accuracy", pct(m.type_matches, m.type_total),
-         TARGETS["type_accuracy"],
-         f"{m.type_matches}/{m.type_total} matched pairs"),
+def _summary_report_block(m: Metrics, reasoning: ReasoningMetrics | None) -> str:
+    """Build the terminal-style report (table + failures) for embedding in
+    summary.md as a fenced code block."""
+    sections: list[str] = [
+        f"Scored {m.ot_total} results "
+        f"({m.golden_observations} golden annotations available)",
+        "",
+        _format_table(_metrics_rows(m)),
+        "",
+        f"Golden-annotated observations scored: {m.golden_observations}",
     ]
-    if reasoning is not None:
-        rows.append((
-            "Reasoning matches answer",
-            pct(reasoning.signals_passed, reasoning.signals_total),
-            REASONING_TARGET,
-            f"{reasoning.signals_passed}/{reasoning.signals_total} signals",
-        ))
+    eg_failures = _format_eg_failures(m)
+    if eg_failures:
+        sections += ["", eg_failures]
 
-    lines = ["| Dimension | Rate | Target | Floor | Result | Detail |",
-             "|---|---:|---:|---:|:---:|---|"]
-    for name, rate, (target, floor), detail in rows:
-        lines.append(
-            f"| {name} | {rate*100:.1f}% | {target*100:.0f}% | {floor*100:.0f}% "
-            f"| **{verdict(rate, target, floor)}** | {detail} |"
-        )
-    return "\n".join(lines)
+    if reasoning is not None:
+        sections += [
+            "",
+            f"Reasoning Audit (N={reasoning.obs_total} observations)",
+            _format_table(_reasoning_rows(reasoning)),
+        ]
+        rs_failures = _format_reasoning_failures(reasoning)
+        if rs_failures:
+            sections += ["", rs_failures]
+
+    return "\n".join(sections)
 
 
 def write_summary(
@@ -873,9 +890,11 @@ _Generated {timestamp} — scope: {scope_desc}_
 
 {header_line}
 
-## Metrics
+## Results
 
-{_metrics_table(m, reasoning)}
+```text
+{_summary_report_block(m, reasoning)}
+```
 
 ## Pass Rates
 
