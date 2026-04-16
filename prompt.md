@@ -28,11 +28,11 @@ Language indicating risk, regression, or areas needing attention. Raise a concer
 
 Map each signal to zero or more CASEL competencies. Use exactly these labels:
 
-- `self_awareness` — Recognizing own emotions, strengths, limitations, growth areas
-- `self_management` — Regulating emotions/behaviors, impulse control, goal-setting, motivation
-- `social_awareness` — Perspective-taking, empathy, recognizing others' emotions, appreciating diversity
-- `relationship_skills` — Communication, cooperation, conflict resolution, help-seeking, teamwork
-- `responsible_decision_making` — Ethical reasoning, evaluating consequences, reflecting on choices
+- `self_awareness` — The ability to accurately recognize one's own emotions, thoughts, and values and how they influence behavior. The ability to accurately assess one's strengths and limitations, with a well-grounded sense of confidence, optimism, and a "growth mindset." Sub-skills: identifying emotions, accurate self-perception, recognizing strengths, self-confidence, self-efficacy.
+- `self_management` — The ability to successfully regulate one's emotions, thoughts, and behaviors in different situations — effectively managing stress, controlling impulses, and motivating oneself. The ability to set and work toward personal and academic goals. Sub-skills: impulse control, stress management, self-discipline, self-motivation, goal setting, organizational skills.
+- `social_awareness` — The ability to take the perspective of and empathize with others, including those from diverse backgrounds and cultures. The ability to understand social and ethical norms for behavior, and to recognize family, school, and community resources and supports. Sub-skills: perspective-taking, empathy, appreciating diversity, respect for others.
+- `relationship_skills` — The ability to establish and maintain healthy and rewarding relationships with diverse individuals and groups. The ability to communicate clearly, listen well, cooperate with others, resist inappropriate social pressure, negotiate conflict constructively, and seek and offer help when needed. Sub-skills: communication, social engagement, relationship building, teamwork.
+- `responsible_decision_making` — The ability to make constructive choices about personal behavior and social interactions based on ethical standards, safety concerns, and social norms. The realistic evaluation of consequences of various actions, and a consideration of the well-being of oneself and others. Sub-skills: identifying problems, analyzing situations, solving problems, evaluating, reflecting, ethical responsibility.
 
 A signal may map to multiple competencies.
 
