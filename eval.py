@@ -832,6 +832,14 @@ def main() -> None:
         action="store_true",
         help="Print the judge prompt without calling the API (only with --audit-reasoning)",
     )
+    parser.add_argument(
+        "--golden",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Restrict scoring to the first N examples in golden.md "
+             "(file order). Filters programmatic, golden, and audit metrics.",
+    )
     args = parser.parse_args()
 
     results = load_results()
@@ -839,9 +847,23 @@ def main() -> None:
         print("No results found. Run `uv run extract.py` first.", file=sys.stderr)
         sys.exit(1)
 
-    golden_by_key: dict[str, GoldenExample] = {}
-    for ex in parse_golden(GOLDEN_PATH):
-        golden_by_key[cache_key(ex.observation, ex.student_count)] = ex
+    golden_examples = parse_golden(GOLDEN_PATH)
+    if args.golden is not None:
+        golden_examples = golden_examples[: args.golden]
+    golden_by_key: dict[str, GoldenExample] = {
+        cache_key(ex.observation, ex.student_count): ex for ex in golden_examples
+    }
+
+    if args.golden is not None:
+        results = [r for r in results if r.cache_key in golden_by_key]
+        if not results:
+            print(
+                "No cached results match the first "
+                f"{args.golden} golden examples. Run "
+                f"`uv run extract.py --golden {args.golden}` first.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
 
     m = Metrics()
     for result in results:

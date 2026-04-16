@@ -6,6 +6,7 @@ import csv
 import hashlib
 import json
 import os
+import re
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -19,6 +20,7 @@ API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
 RESULTS_DIR = Path("results")
 PROMPT_PATH = Path("prompt.md")
+GOLDEN_PATH = Path("golden.md")
 MODEL = "anthropic/claude-opus-4-6"
 
 
@@ -149,21 +151,69 @@ def load_csv(path: str = "sample-obs.csv") -> list[dict[str, str]]:
         return list(csv.DictReader(f))
 
 
+def load_golden_rows(limit: int | None = None) -> list[dict[str, str]]:
+    """Read just `Observation:` and `Student Count:` from golden.md.
+
+    Deliberately does NOT touch the **Output** section, so the answer key
+    cannot enter this script even by accident. Returns rows in the same
+    shape as load_csv() so the rest of the pipeline stays unchanged.
+    """
+    if not GOLDEN_PATH.exists():
+        print(f"ERROR: {GOLDEN_PATH} not found", file=sys.stderr)
+        sys.exit(1)
+
+    text = GOLDEN_PATH.read_text()
+    parts = re.split(r"^##\s*Example\s+(\d+)\s*$", text, flags=re.MULTILINE)
+    # parts = [preamble, num, body, num, body, ...]
+
+    rows: list[dict[str, str]] = []
+    for i in range(1, len(parts), 2):
+        number = parts[i]
+        body = parts[i + 1]
+        obs_match = re.search(
+            r'Observation:\s*"(.+?)"\s*\n\s*Student Count:',
+            body,
+            re.DOTALL,
+        )
+        sc_match = re.search(r"Student Count:\s*(\d+)", body)
+        if not obs_match or not sc_match:
+            continue
+        rows.append({
+            "comment_key": f"golden#{number}",
+            "observation": obs_match.group(1),
+            "student_count": sc_match.group(1),
+        })
+        if limit is not None and len(rows) >= limit:
+            break
+    return rows
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Extract insight signals from observations")
     parser.add_argument("--limit", type=int, default=None, help="Process only first N rows")
     parser.add_argument("--force", action="store_true", help="Bust cache and re-call all")
     parser.add_argument("--dry-run", action="store_true", help="Print prompts without API calls")
     parser.add_argument("--workers", type=int, default=1, help="Parallel workers")
+    parser.add_argument(
+        "--golden",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Extract first N golden.md observations instead of sample-obs.csv "
+             "(answer key is never read)",
+    )
     args = parser.parse_args()
 
     RESULTS_DIR.mkdir(exist_ok=True)
 
     system_prompt = load_system_prompt()
-    rows = load_csv()
 
-    if args.limit is not None:
-        rows = rows[: args.limit]
+    if args.golden is not None:
+        rows = load_golden_rows(limit=args.golden)
+    else:
+        rows = load_csv()
+        if args.limit is not None:
+            rows = rows[: args.limit]
 
     client = OpenAI(
         base_url="https://openrouter.ai/api/v1",
