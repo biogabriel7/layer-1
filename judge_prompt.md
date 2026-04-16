@@ -46,7 +46,7 @@ Confidence reflects how specific and observable the evidence is — concrete act
 
 9. **Capability vs. observed action**: Statements about what a student "can do", "is beginning to understand", or "is able to" describe potential, not witnessed events. They are extractable but confidence is capped at `low` unless paired with a specific witnessed instance in the same observation. When a capability is paired with a concrete action, extract the concrete action at appropriate confidence and drop the capability statement unless it adds non-redundant information.
 
-10. **Reasoning required**: Each signal must include a `reasoning` string addressing: (a) why this type was chosen and what was ruled out, (b) why these SEL competencies apply or none do, (c) what drives the confidence level, (d) why the evidence boundary was drawn here when non-obvious, (e) [concern_flag only] why this crosses from minor challenge into flaggable concern — reference the specific words ("repeatedly", "can't control", "refuses") that indicate a pattern rather than a routine struggle.
+10. **Reasoning required**: Each signal must include a `reasoning` string addressing: (a) why this type was chosen, (b) why these SEL competencies apply (or why none do), (c) what drives the confidence level, (d) why the evidence boundary was drawn here when non-obvious, (e) [concern_flag only] why this crosses from minor challenge into flaggable concern — reference the specific words ("repeatedly", "can't control", "refuses") that indicate a pattern rather than a routine struggle. Justify the choices made; do not require explanations of alternatives that were not chosen.
 
 ---
 
@@ -54,7 +54,7 @@ Confidence reflects how specific and observable the evidence is — concrete act
 
 For each predicted signal, evaluate four binary checks. Each check returns `{"passed": true|false, "note": "<short explanation, ≤1 sentence>"}`. Be strict — if the reasoning is generic ("this is clearly behavioral"), mark `passed: false` and explain what was missing. The bar is set by Rule 10.
 
-- `reasoning_supports_type` — Does the reasoning state **why this type was chosen** AND **what alternatives were considered/ruled out**? (Rule 10a)
+- `reasoning_supports_type` — Does the reasoning state **why this type was chosen**, grounded in the specific words of the evidence? Do NOT require the reasoning to enumerate alternatives that were ruled out — positive justification of the chosen type is sufficient. (Rule 10a)
 - `reasoning_supports_competencies` — Does the reasoning justify which SEL competencies apply, OR explicitly explain why none apply? Listing the competencies without justification fails. (Rule 10b)
 - `reasoning_supports_confidence` — Does the reasoning explain **what specifically in the evidence** drives the high/medium/low level, consistent with the confidence scale above? Saying "confidence: high because the action is clear" fails unless the reasoning ties to evidence specificity. (Rule 10c)
 - `reasoning_complete` — Does the reasoning cover every element of Rule 10 that applies?
