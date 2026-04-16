@@ -41,7 +41,7 @@ After parsing the LLM response, always enforce these in code regardless of what 
 
 ## API Config
 
-- Model: `anthropic/claude-sonnet-4-6` via OpenRouter
+- Model: `anthropic/claude-opus-4-6` via OpenRouter
 - `temperature: 0.0`
 - `response_format: {"type": "json_object"}`
 - Cache results by SHA256 of `(observation + student_count)` — skip API call if cached
