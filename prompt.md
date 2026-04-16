@@ -50,21 +50,28 @@ Confidence reflects how specific and observable the evidence is — concrete act
 ## Rules
 
 1. **Evidence-first**: Every signal MUST use a verbatim quote from the observation as its evidence. If you can't point to text that supports the signal, don't extract it.
-2. **One signal per evidence unit**: Each distinct behavioral event, emotional indicator, or context should be one signal. Don't merge unrelated evidence into one signal, and don't split a single action into multiple signals.
-3. **Observable over evaluative**: Prefer extracting observable actions over teacher judgments. Both can appear, but observable actions get higher confidence.
-4. **No inference beyond text**: Extract only what the teacher explicitly wrote. Never infer diagnoses, home life, character judgments, or conditions not stated in the text.
-5. **Mixed observations**: When an observation contains both positive and negative language, extract both. Each gets its own signal with appropriate type.
-6. **Empty or meaningless content**: If the observation contains no meaningful content (e.g., "No Comment", blank text), return an empty signals array.
-7. **Short observations**: Extract what's there. A single sentence can yield one valid signal. Don't pad with invented signals.
-8. **Long observations**: These often contain 5+ signals. Extract all of them. If the text describes multiple students by name, yield separate signals for each described behavior.
+2. **One signal per evidence unit**: An evidence unit is defined by meaning, not sentence boundaries:
+   - A single coherent action across multiple clauses is one unit ("She walked over to the new student and introduced herself").
+   - A sentence describing multiple distinct skills, subjects, or moments is multiple units — split it ("He wrote a paragraph and spelled every word correctly" → two signals).
+   - A pattern plus its supporting incident is one unit when merging preserves the escalation or causal structure that gives the signal its meaning. This applies especially to concern_flag, where a full multi-sentence observation can be a single signal.
+   - Tie-breaker: if splitting removes context needed to classify type or confidence, keep merged. If merging hides a distinct second signal, split.
+3. **Observable over evaluative**: When the teacher pairs a judgment ("showed leadership", "demonstrated curiosity") with a concrete action describing the same moment, extract only the action. Judgments are interpretation; actions are evidence. Exception: if the evaluative phrase reports the student's own expressed feeling ("he said he felt proud"), keep it as emotional_indicator.
+4. **No inference beyond text**: Extract only what the teacher explicitly wrote. Never infer diagnoses, home life, character judgments, or conditions not stated.
+5. **Mixed observations**: When an observation contains both positive and negative language, extract both, each as its own signal.
+6. **Empty or meaningless content**: If the observation contains no meaningful content ("No Comment", blank, "N/A"), return an empty signals array.
+7. **Match output to input**: A short observation may yield one signal; don't pad. A long observation often contains 5+ signals; extract them all. When multiple students are named, yield separate signals for each.
+8. **Group observations with unnamed actors**: When a group observation references an unnamed actor ("one student", "a member", "some", "a few"), confidence is capped at `medium` because the action cannot be attributed. When two or more unnamed subgroups are described with conflicting states ("some said X, others said Y"), do not extract — there is no attributable subject.
+9. **Capability vs. observed action**: Statements about what a student "can do", "is beginning to understand", or "is able to" describe potential, not witnessed events. They are extractable but confidence is capped at `low` unless paired with a specific witnessed instance in the same observation. When a capability is paired with a concrete action, extract the concrete action at appropriate confidence and drop the capability statement unless it adds non-redundant information.
+10. **Reasoning required**: Each signal must include a `reasoning` string addressing: (a) why this type was chosen and what was ruled out, (b) why these SEL competencies apply or none do, (c) what drives the confidence level, (d) why the evidence boundary was drawn here when non-obvious, (e) [concern_flag only] why this crosses from minor challenge into flaggable concern — reference the specific words ("repeatedly", "can't control", "refuses") that indicate a pattern rather than a routine struggle.
 
 
 ## What NOT to Extract
 
-- Opinions about the student's character or personality that aren't grounded in observed behavior
+- Teacher judgments about character, personality, or potential not grounded in a witnessed action (extract the action instead — see Rule 3)
 - Inferences about home life, family, or circumstances not mentioned in the text
 - Diagnoses or clinical labels (ADHD, anxiety, etc.) unless the teacher explicitly wrote them
-- The teacher's hopes, wishes, or predictions about the future ("I hope he will keep this up" is NOT a signal)
+- Hopes, wishes, or predictions about the future ("I hope he will keep this up")
+- Teacher reflections on lesson value or takeaways ("we discussed how listening is important", "this shows the value of teamwork") — these describe the teacher's framing, not student behavior
 - Generic filler that doesn't describe behavior, emotion, or context
 
 ## Output Schema
