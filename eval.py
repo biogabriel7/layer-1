@@ -42,6 +42,7 @@ RESULTS_DIR = Path("results")
 CSV_PATH = Path("sample-obs.csv")
 GOLDEN_PATH = Path("golden.md")
 JUDGE_PROMPT_PATH = Path("judge_prompt.md")
+RUBRIC_PATH = Path("prompt.md")
 REASONING_EVAL_DIR = Path("reasoning_eval")
 SUMMARY_PATH = Path("summary.md")
 JUDGE_MODEL = "anthropic/claude-sonnet-4-6"
@@ -83,6 +84,7 @@ class GoldenExample:
     observation: str
     student_count: int
     signals: list[Signal]
+    raw_output: str = ""  # verbatim signals block from golden.md — shown to judge
 
 
 @dataclass
@@ -125,10 +127,29 @@ class SignalJudgement:
     matches_answer: tuple[bool, str]          # (passed, note)
 
 
+# Verdicts the judge may assign to a predicted-vs-golden disagreement.
+GOLDEN_VERDICTS = {"model_wrong", "golden_wrong", "ambiguous"}
+
+
+@dataclass
+class GoldenDifference:
+    description: str
+    likely_cause: str
+    verdict: str           # one of GOLDEN_VERDICTS
+    rubric_rule: str
+
+
+@dataclass
+class GoldenComparison:
+    differences: list[GoldenDifference]
+    summary: str
+
+
 @dataclass
 class ObservationJudgement:
     cache_key: str
     per_signal: list[SignalJudgement]
+    golden_comparison: GoldenComparison | None = None
 
 
 @dataclass
@@ -139,6 +160,14 @@ class ReasoningMetrics:
 
     # (cache_key, evidence snippet, judge note)
     failures: list[tuple[str, str, str]] = field(default_factory=list)
+
+    # Golden-comparison aggregates.
+    gc_total_differences: int = 0
+    gc_model_wrong: int = 0
+    gc_golden_wrong: int = 0
+    gc_ambiguous: int = 0
+    # Observations with ≥1 difference, ordered by cache_key.
+    gc_entries: list[tuple[str, GoldenComparison]] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -295,6 +324,7 @@ def parse_golden(path: Path) -> list[GoldenExample]:
                 observation=observation,
                 student_count=student_count,
                 signals=signals,
+                raw_output=output.strip(),
             )
         )
     return examples
@@ -514,19 +544,30 @@ def report(m: Metrics, show_failures: bool) -> None:
 
 
 def load_judge_prompt() -> str:
+    """System prompt for the judge: judge_prompt.md + the full extraction
+    rubric (prompt.md) appended so the judge can cite rules by number when
+    comparing predicted vs. golden signals."""
     if not JUDGE_PROMPT_PATH.exists():
         print(f"ERROR: {JUDGE_PROMPT_PATH} not found", file=sys.stderr)
         sys.exit(1)
-    return JUDGE_PROMPT_PATH.read_text()
+    if not RUBRIC_PATH.exists():
+        print(f"ERROR: {RUBRIC_PATH} not found", file=sys.stderr)
+        sys.exit(1)
+    judge = JUDGE_PROMPT_PATH.read_text()
+    rubric = RUBRIC_PATH.read_text()
+    return f"{judge}\n\n---\n\n# Appended: Extraction Rubric\n\n{rubric}"
 
 
 def build_judge_user_message(
     result: ResultFile,
     raw_signals: list[dict[str, Any]],
+    golden: GoldenExample,
 ) -> str:
     """Serialize the judge input. raw_signals comes from results/<key>.json so
     that reasoning, sel_competencies, and observation_confidence are preserved
-    (the trimmed ResultFile.signals only carries evidence + type)."""
+    (the trimmed ResultFile.signals only carries evidence + type). The golden
+    signals block is passed verbatim so the judge sees exactly what the
+    annotator wrote."""
     payload = {
         "observation": result.observation,
         "student_count": result.student_count,
@@ -541,6 +582,7 @@ def build_judge_user_message(
             }
             for i, s in enumerate(raw_signals)
         ],
+        "golden_signals": golden.raw_output,
     }
     return json.dumps(payload, ensure_ascii=False, indent=2)
 
@@ -579,6 +621,32 @@ def _check(d: Any) -> tuple[bool, str]:
     return (bool(d.get("passed", False)), str(d.get("note", "")))
 
 
+def _parse_golden_comparison(raw: Any) -> GoldenComparison | None:
+    if not isinstance(raw, dict):
+        return None
+    diffs_raw = raw.get("differences", [])
+    differences: list[GoldenDifference] = []
+    if isinstance(diffs_raw, list):
+        for d in diffs_raw:
+            if not isinstance(d, dict):
+                continue
+            verdict = str(d.get("verdict", "")).strip()
+            if verdict not in GOLDEN_VERDICTS:
+                verdict = "ambiguous"
+            differences.append(
+                GoldenDifference(
+                    description=str(d.get("description", "")).strip(),
+                    likely_cause=str(d.get("likely_cause", "")).strip(),
+                    verdict=verdict,
+                    rubric_rule=str(d.get("rubric_rule", "")).strip(),
+                )
+            )
+    return GoldenComparison(
+        differences=differences,
+        summary=str(raw.get("summary", "")).strip(),
+    )
+
+
 def parse_judge_response(
     raw: dict[str, Any], result_cache_key: str
 ) -> ObservationJudgement:
@@ -597,11 +665,13 @@ def parse_judge_response(
     return ObservationJudgement(
         cache_key=result_cache_key,
         per_signal=per_signal,
+        golden_comparison=_parse_golden_comparison(raw.get("golden_comparison")),
     )
 
 
 def audit_one(
     result: ResultFile,
+    golden: GoldenExample,
     judge_prompt: str,
     client: OpenAI | None,
     *,
@@ -612,7 +682,7 @@ def audit_one(
     raw_data = json.loads((RESULTS_DIR / f"{result.cache_key}.json").read_text())
     raw_signals_obj = raw_data.get("signals", [])
     raw_signals: list[dict[str, Any]] = [s for s in raw_signals_obj if isinstance(s, dict)]
-    user_msg = build_judge_user_message(result, raw_signals)
+    user_msg = build_judge_user_message(result, raw_signals, golden)
     rc_key = reasoning_cache_key(judge_prompt, user_msg)
     cache_path = REASONING_EVAL_DIR / f"{rc_key}.json"
 
@@ -636,7 +706,9 @@ def audit_one(
 
 def aggregate_reasoning(judgements: Iterable[ObservationJudgement]) -> ReasoningMetrics:
     m = ReasoningMetrics()
-    for j in judgements:
+    # Sort by cache_key for stable output.
+    ordered = sorted(judgements, key=lambda j: j.cache_key)
+    for j in ordered:
         m.obs_total += 1
         for sj in j.per_signal:
             m.signals_total += 1
@@ -646,7 +718,62 @@ def aggregate_reasoning(judgements: Iterable[ObservationJudgement]) -> Reasoning
             else:
                 snippet = sj.evidence if len(sj.evidence) <= 100 else sj.evidence[:97] + "..."
                 m.failures.append((j.cache_key, snippet, note))
+
+        gc = j.golden_comparison
+        if gc is None:
+            continue
+        if gc.differences:
+            m.gc_entries.append((j.cache_key, gc))
+        for d in gc.differences:
+            m.gc_total_differences += 1
+            if d.verdict == "model_wrong":
+                m.gc_model_wrong += 1
+            elif d.verdict == "golden_wrong":
+                m.gc_golden_wrong += 1
+            else:
+                m.gc_ambiguous += 1
     return m
+
+
+def _format_golden_comparison(m: ReasoningMetrics, max_entries: int = 20) -> str:
+    """Human-readable golden-comparison block for the terminal and summary.md.
+
+    Leads with the aggregate counts, then one paragraph per observation with
+    differences (capped). Observations where predicted and golden fully agree
+    are omitted to keep the report focused on what needs review."""
+    if m.obs_total == 0:
+        return ""
+    lines: list[str] = [
+        f"Golden Comparison (N={m.obs_total} observations)",
+        (
+            f"  {m.gc_total_differences} total differences  |  "
+            f"model_wrong: {m.gc_model_wrong}  "
+            f"golden_wrong: {m.gc_golden_wrong}  "
+            f"ambiguous: {m.gc_ambiguous}"
+        ),
+    ]
+
+    if not m.gc_entries:
+        lines.append("  (no meaningful differences reported)")
+        return "\n".join(lines)
+
+    shown = m.gc_entries[:max_entries]
+    for key, gc in shown:
+        lines.append("")
+        lines.append(f"  [{key[:12]}] {gc.summary}" if gc.summary else f"  [{key[:12]}]")
+        for d in gc.differences:
+            tag = d.verdict.upper().replace("_", " ")
+            rule = f" — {d.rubric_rule}" if d.rubric_rule else ""
+            lines.append(f"    - ({tag}{rule}) {d.description}")
+            if d.likely_cause:
+                lines.append(f"        why: {d.likely_cause}")
+
+    if len(m.gc_entries) > max_entries:
+        lines.append("")
+        lines.append(
+            f"  ...and {len(m.gc_entries) - max_entries} more observations with differences"
+        )
+    return "\n".join(lines)
 
 
 def report_reasoning(m: ReasoningMetrics, show_failures: bool) -> None:
@@ -659,6 +786,11 @@ def report_reasoning(m: ReasoningMetrics, show_failures: bool) -> None:
         if failures:
             print()
             print(failures)
+
+    gc_block = _format_golden_comparison(m)
+    if gc_block:
+        print()
+        print(gc_block)
 
 
 def run_reasoning_audit(
@@ -682,7 +814,7 @@ def run_reasoning_audit(
     if args.dry_run:
         for result in audit_candidates:
             audit_one(
-                result, judge_prompt,
+                result, golden_by_key[result.cache_key], judge_prompt,
                 client=None, force=args.force, dry_run=True,
             )
         return None
@@ -696,7 +828,8 @@ def run_reasoning_audit(
 
     def _do_audit(r: ResultFile) -> ObservationJudgement | None:
         return audit_one(
-            r, judge_prompt, client, force=args.force, dry_run=False,
+            r, golden_by_key[r.cache_key], judge_prompt, client,
+            force=args.force, dry_run=False,
         )
 
     judgements: list[ObservationJudgement] = []
@@ -810,6 +943,10 @@ def _summary_report_block(m: Metrics, reasoning: ReasoningMetrics | None) -> str
         rs_failures = _format_reasoning_failures(reasoning)
         if rs_failures:
             sections += ["", rs_failures]
+
+        gc_block = _format_golden_comparison(reasoning)
+        if gc_block:
+            sections += ["", gc_block]
 
     return "\n".join(sections)
 
