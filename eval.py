@@ -25,11 +25,13 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 import os
 import re
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -41,13 +43,13 @@ CSV_PATH = Path("sample-obs.csv")
 GOLDEN_PATH = Path("golden.md")
 JUDGE_PROMPT_PATH = Path("judge_prompt.md")
 REASONING_EVAL_DIR = Path("reasoning_eval")
+SUMMARY_PATH = Path("summary.md")
 JUDGE_MODEL = "anthropic/claude-sonnet-4-6"
 
 VALID_TYPES = {
     "behavioral_evidence",
     "emotional_indicator",
     "context_marker",
-    "mastery_signal",
     "concern_flag",
 }
 
@@ -60,16 +62,8 @@ TARGETS = {
     "observation_type": (1.00, 0.98),
 }
 
-# Targets for the LLM-judge reasoning audit (--audit-reasoning).
-REASONING_TARGETS = {
-    "reasoning_supports_type":         (0.95, 0.85),
-    "reasoning_supports_competencies": (0.95, 0.85),
-    "reasoning_supports_confidence":   (0.95, 0.85),
-    "reasoning_complete":              (0.95, 0.85),
-    "no_missing_signals":              (1.00, 0.95),
-    "no_hallucinated_signals":         (1.00, 0.95),
-    "type_agreement":                  (0.95, 0.85),
-}
+# Target for the LLM-judge reasoning audit (--audit-reasoning).
+REASONING_TARGET = (0.95, 0.85)
 
 
 # ---------------------------------------------------------------------------
@@ -128,40 +122,22 @@ class Metrics:
 class SignalJudgement:
     signal_index: int
     evidence: str
-    supports_type: tuple[bool, str]          # (passed, note)
-    supports_competencies: tuple[bool, str]
-    supports_confidence: tuple[bool, str]
-    complete: tuple[bool, str]
+    matches_answer: tuple[bool, str]          # (passed, note)
 
 
 @dataclass
 class ObservationJudgement:
     cache_key: str
     per_signal: list[SignalJudgement]
-    missing_signals: list[tuple[str, str]]                       # (evidence, note)
-    hallucinated_signals: list[tuple[int, str]]                  # (signal_index, note)
-    type_disagreements: list[tuple[int, str, str, str]]          # (idx, predicted, golden, note)
-    matched_pair_count: int                                      # denominator for type_agreement
 
 
 @dataclass
 class ReasoningMetrics:
-    supports_type_total: int = 0
-    supports_type_passed: int = 0
-    supports_comp_total: int = 0
-    supports_comp_passed: int = 0
-    supports_conf_total: int = 0
-    supports_conf_passed: int = 0
-    complete_total: int = 0
-    complete_passed: int = 0
-
     obs_total: int = 0
-    no_missing_passed: int = 0
-    no_hallucinated_passed: int = 0
-    type_pair_total: int = 0
-    type_pair_passed: int = 0
+    signals_total: int = 0
+    signals_passed: int = 0
 
-    # (cache_key, "[check_label] evidence snippet", judge note)
+    # (cache_key, evidence snippet, judge note)
     failures: list[tuple[str, str, str]] = field(default_factory=list)
 
 
@@ -508,7 +484,6 @@ def load_judge_prompt() -> str:
 def build_judge_user_message(
     result: ResultFile,
     raw_signals: list[dict[str, Any]],
-    golden: GoldenExample,
 ) -> str:
     """Serialize the judge input. raw_signals comes from results/<key>.json so
     that reasoning, sel_competencies, and observation_confidence are preserved
@@ -526,10 +501,6 @@ def build_judge_user_message(
                 "reasoning": s.get("reasoning", ""),
             }
             for i, s in enumerate(raw_signals)
-        ],
-        "golden_signals": [
-            {"evidence": s.evidence, "type": s.type}
-            for s in golden.signals
         ],
     }
     return json.dumps(payload, ensure_ascii=False, indent=2)
@@ -570,7 +541,7 @@ def _check(d: Any) -> tuple[bool, str]:
 
 
 def parse_judge_response(
-    raw: dict[str, Any], result_cache_key: str, predicted_count: int
+    raw: dict[str, Any], result_cache_key: str
 ) -> ObservationJudgement:
     per_signal: list[SignalJudgement] = []
     for entry in raw.get("per_signal", []):
@@ -580,49 +551,18 @@ def parse_judge_response(
             SignalJudgement(
                 signal_index=int(entry.get("signal_index", -1)),
                 evidence=str(entry.get("evidence", "")),
-                supports_type=_check(entry.get("reasoning_supports_type")),
-                supports_competencies=_check(entry.get("reasoning_supports_competencies")),
-                supports_confidence=_check(entry.get("reasoning_supports_confidence")),
-                complete=_check(entry.get("reasoning_complete")),
+                matches_answer=_check(entry.get("reasoning_matches_answer")),
             )
         )
-
-    missing: list[tuple[str, str]] = [
-        (str(e.get("evidence", "")), str(e.get("note", "")))
-        for e in raw.get("missing_signals", [])
-        if isinstance(e, dict)
-    ]
-    hallucinated: list[tuple[int, str]] = [
-        (int(e.get("signal_index", -1)), str(e.get("note", "")))
-        for e in raw.get("hallucinated_signals", [])
-        if isinstance(e, dict)
-    ]
-    type_disagreements: list[tuple[int, str, str, str]] = [
-        (
-            int(e.get("signal_index", -1)),
-            str(e.get("predicted", "")),
-            str(e.get("golden", "")),
-            str(e.get("note", "")),
-        )
-        for e in raw.get("type_disagreements", [])
-        if isinstance(e, dict)
-    ]
-
-    matched_pair_count = max(0, predicted_count - len(hallucinated))
 
     return ObservationJudgement(
         cache_key=result_cache_key,
         per_signal=per_signal,
-        missing_signals=missing,
-        hallucinated_signals=hallucinated,
-        type_disagreements=type_disagreements,
-        matched_pair_count=matched_pair_count,
     )
 
 
 def audit_one(
     result: ResultFile,
-    golden: GoldenExample,
     judge_prompt: str,
     client: OpenAI | None,
     *,
@@ -633,7 +573,7 @@ def audit_one(
     raw_data = json.loads((RESULTS_DIR / f"{result.cache_key}.json").read_text())
     raw_signals_obj = raw_data.get("signals", [])
     raw_signals: list[dict[str, Any]] = [s for s in raw_signals_obj if isinstance(s, dict)]
-    user_msg = build_judge_user_message(result, raw_signals, golden)
+    user_msg = build_judge_user_message(result, raw_signals)
     rc_key = reasoning_cache_key(judge_prompt, user_msg)
     cache_path = REASONING_EVAL_DIR / f"{rc_key}.json"
 
@@ -652,98 +592,44 @@ def audit_one(
         REASONING_EVAL_DIR.mkdir(exist_ok=True)
         cache_path.write_text(json.dumps(raw_judge, indent=2, ensure_ascii=False))
 
-    return parse_judge_response(raw_judge, result.cache_key, len(raw_signals))
+    return parse_judge_response(raw_judge, result.cache_key)
 
 
 def aggregate_reasoning(judgements: Iterable[ObservationJudgement]) -> ReasoningMetrics:
     m = ReasoningMetrics()
     for j in judgements:
         m.obs_total += 1
-        if not j.missing_signals:
-            m.no_missing_passed += 1
-        if not j.hallucinated_signals:
-            m.no_hallucinated_passed += 1
-        m.type_pair_total += j.matched_pair_count
-        m.type_pair_passed += max(0, j.matched_pair_count - len(j.type_disagreements))
-
         for sj in j.per_signal:
-            for label, (passed, note) in (
-                ("supports_type", sj.supports_type),
-                ("supports_competencies", sj.supports_competencies),
-                ("supports_confidence", sj.supports_confidence),
-                ("complete", sj.complete),
-            ):
-                if label == "supports_type":
-                    m.supports_type_total += 1
-                    if passed:
-                        m.supports_type_passed += 1
-                elif label == "supports_competencies":
-                    m.supports_comp_total += 1
-                    if passed:
-                        m.supports_comp_passed += 1
-                elif label == "supports_confidence":
-                    m.supports_conf_total += 1
-                    if passed:
-                        m.supports_conf_passed += 1
-                else:
-                    m.complete_total += 1
-                    if passed:
-                        m.complete_passed += 1
-
-                if not passed:
-                    snippet = sj.evidence if len(sj.evidence) <= 100 else sj.evidence[:97] + "..."
-                    m.failures.append((j.cache_key, f"[{label}] {snippet}", note))
+            m.signals_total += 1
+            passed, note = sj.matches_answer
+            if passed:
+                m.signals_passed += 1
+            else:
+                snippet = sj.evidence if len(sj.evidence) <= 100 else sj.evidence[:97] + "..."
+                m.failures.append((j.cache_key, snippet, note))
     return m
 
 
 def report_reasoning(m: ReasoningMetrics, show_failures: bool) -> None:
-    rows: list[tuple[str, float, tuple[float, float], str]] = [
-        ("Reasoning supports type",
-         pct(m.supports_type_passed, m.supports_type_total),
-         REASONING_TARGETS["reasoning_supports_type"],
-         f"{m.supports_type_passed}/{m.supports_type_total} signals"),
-        ("Reasoning supports competencies",
-         pct(m.supports_comp_passed, m.supports_comp_total),
-         REASONING_TARGETS["reasoning_supports_competencies"],
-         f"{m.supports_comp_passed}/{m.supports_comp_total} signals"),
-        ("Reasoning supports confidence",
-         pct(m.supports_conf_passed, m.supports_conf_total),
-         REASONING_TARGETS["reasoning_supports_confidence"],
-         f"{m.supports_conf_passed}/{m.supports_conf_total} signals"),
-        ("Reasoning complete (Rule 10)",
-         pct(m.complete_passed, m.complete_total),
-         REASONING_TARGETS["reasoning_complete"],
-         f"{m.complete_passed}/{m.complete_total} signals"),
-        ("No missing signals vs. golden",
-         pct(m.no_missing_passed, m.obs_total),
-         REASONING_TARGETS["no_missing_signals"],
-         f"{m.no_missing_passed}/{m.obs_total} observations"),
-        ("No hallucinated signals vs. golden",
-         pct(m.no_hallucinated_passed, m.obs_total),
-         REASONING_TARGETS["no_hallucinated_signals"],
-         f"{m.no_hallucinated_passed}/{m.obs_total} observations"),
-        ("Type agreement vs. golden",
-         pct(m.type_pair_passed, m.type_pair_total),
-         REASONING_TARGETS["type_agreement"],
-         f"{m.type_pair_passed}/{m.type_pair_total} matched pairs"),
-    ]
+    rate = pct(m.signals_passed, m.signals_total)
+    target, floor = REASONING_TARGET
+    detail = f"{m.signals_passed}/{m.signals_total} signals"
 
     print()
-    print(f"Reasoning Audit (N={m.obs_total} golden-annotated observations)")
+    print(f"Reasoning Audit (N={m.obs_total} observations)")
     print(f"{'Dimension':<40} {'Rate':>8} {'Target':>8} {'Floor':>8}  Result  Detail")
     print("-" * 110)
-    for name, rate, (target, floor), detail in rows:
-        v = verdict(rate, target, floor)
-        print(
-            f"{name:<40} {rate*100:>7.1f}% {target*100:>7.0f}% {floor*100:>7.0f}%"
-            f"  {v:<6}  {detail}"
-        )
+    v = verdict(rate, target, floor)
+    print(
+        f"{'Reasoning matches answer':<40} {rate*100:>7.1f}% {target*100:>7.0f}% {floor*100:>7.0f}%"
+        f"  {v:<6}  {detail}"
+    )
 
     if show_failures and m.failures:
         print("\nFlagged signals (first 20):")
-        for key, label_ev, note in m.failures[:20]:
+        for key, snippet, note in m.failures[:20]:
             note_snip = note if len(note) <= 80 else note[:77] + "..."
-            print(f"  {key[:12]}  {label_ev!r}  → {note_snip}")
+            print(f"  {key[:12]}  {snippet!r}  → {note_snip}")
         if len(m.failures) > 20:
             print(f"  ...and {len(m.failures) - 20} more")
 
@@ -752,27 +638,27 @@ def run_reasoning_audit(
     results: list[ResultFile],
     golden_by_key: dict[str, GoldenExample],
     args: argparse.Namespace,
-) -> None:
+) -> ReasoningMetrics | None:
     judge_prompt = load_judge_prompt()
-    audit_candidates: list[tuple[ResultFile, GoldenExample]] = [
-        (r, golden_by_key[r.cache_key])
-        for r in results
-        if r.cache_key in golden_by_key
+    # Scope the audit to golden-annotated observations so the judge runs on a
+    # curated sample by default. --golden/--limit further narrow the scope.
+    audit_candidates: list[ResultFile] = [
+        r for r in results if r.cache_key in golden_by_key
     ]
     if args.limit is not None:
         audit_candidates = audit_candidates[: args.limit]
 
     if not audit_candidates:
         print("\nNo golden-matched results to audit.", file=sys.stderr)
-        return
+        return None
 
     if args.dry_run:
-        for result, golden in audit_candidates:
+        for result in audit_candidates:
             audit_one(
-                result, golden, judge_prompt,
+                result, judge_prompt,
                 client=None, force=args.force, dry_run=True,
             )
-        return
+        return None
 
     load_dotenv(".env.local")
     api_key = os.environ.get("OPENROUTER_API_KEY", "")
@@ -781,15 +667,15 @@ def run_reasoning_audit(
         sys.exit(1)
     client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
 
-    def _do_audit(r: ResultFile, g: GoldenExample) -> ObservationJudgement | None:
+    def _do_audit(r: ResultFile) -> ObservationJudgement | None:
         return audit_one(
-            r, g, judge_prompt, client, force=args.force, dry_run=False,
+            r, judge_prompt, client, force=args.force, dry_run=False,
         )
 
     judgements: list[ObservationJudgement] = []
     errors = 0
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        futures = {pool.submit(_do_audit, r, g): r for r, g in audit_candidates}
+        futures = {pool.submit(_do_audit, r): r for r in audit_candidates}
         for future in as_completed(futures):
             try:
                 j = future.result()
@@ -805,6 +691,211 @@ def run_reasoning_audit(
 
     metrics = aggregate_reasoning(judgements)
     report_reasoning(metrics, show_failures=args.show_failures)
+    return metrics
+
+
+# ---------------------------------------------------------------------------
+# Summary file (Markdown with Mermaid charts)
+# ---------------------------------------------------------------------------
+
+
+def _distributions(results: list[ResultFile]) -> dict[str, Any]:
+    """Collect counts needed for summary charts. Re-reads each result JSON
+    because ResultFile.Signal only carries evidence + type."""
+    type_counts: dict[str, int] = {}
+    confidence_counts: dict[str, int] = {"high": 0, "medium": 0, "low": 0}
+    sel_counts: dict[str, int] = {}
+    signals_per_obs: dict[int, int] = {}
+    obs_type_counts: dict[str, int] = {"individual": 0, "group": 0}
+
+    for r in results:
+        obs_type_counts[r.observation_type] = obs_type_counts.get(r.observation_type, 0) + 1
+        n = len(r.signals)
+        signals_per_obs[n] = signals_per_obs.get(n, 0) + 1
+        for sig in r.signals:
+            type_counts[sig.type] = type_counts.get(sig.type, 0) + 1
+
+        raw = json.loads((RESULTS_DIR / f"{r.cache_key}.json").read_text())
+        for s in raw.get("signals", []):
+            if not isinstance(s, dict):
+                continue
+            conf = str(s.get("observation_confidence", ""))
+            if conf in confidence_counts:
+                confidence_counts[conf] += 1
+            comps = s.get("sel_competencies") or []
+            if isinstance(comps, list):
+                for comp in comps:
+                    sel_counts[str(comp)] = sel_counts.get(str(comp), 0) + 1
+
+    return {
+        "type_counts": type_counts,
+        "confidence_counts": confidence_counts,
+        "sel_counts": sel_counts,
+        "signals_per_obs": signals_per_obs,
+        "obs_type_counts": obs_type_counts,
+    }
+
+
+def _mermaid_bar(
+    title: str,
+    labels: list[str],
+    values: list[float],
+    y_label: str,
+    y_max: float | None = None,
+) -> str:
+    if y_max is None:
+        peak = max(values) if values else 1.0
+        y_max = math.ceil(peak * 1.1 / 5) * 5 if peak > 0 else 10
+    labels_str = "[" + ", ".join(f'"{lbl}"' for lbl in labels) + "]"
+    values_str = "[" + ", ".join(f"{v:g}" for v in (round(v, 1) for v in values)) + "]"
+    return (
+        "```mermaid\n"
+        "xychart-beta\n"
+        f'    title "{title}"\n'
+        f"    x-axis {labels_str}\n"
+        f'    y-axis "{y_label}" 0 --> {y_max}\n'
+        f"    bar {values_str}\n"
+        "```"
+    )
+
+
+def _metrics_table(m: Metrics, reasoning: ReasoningMetrics | None) -> str:
+    rows: list[tuple[str, float, tuple[float, float], str]] = [
+        ("Evidence Grounding", pct(m.eg_passed, m.eg_total),
+         TARGETS["evidence_grounding"],
+         f"{m.eg_passed}/{m.eg_total} signals"),
+        ("Observation Type", pct(m.ot_passed, m.ot_total),
+         TARGETS["observation_type"],
+         f"{m.ot_passed}/{m.ot_total} observations"),
+        ("Signal Completeness (recall)",
+         pct(m.golden_signals_matched, m.golden_signals_total),
+         TARGETS["signal_completeness"],
+         f"{m.golden_signals_matched}/{m.golden_signals_total} golden signals"),
+        ("No Hallucinated Signals (precision)",
+         pct(m.predicted_signals_matched, m.predicted_signals_total),
+         TARGETS["no_hallucinated_signals"],
+         f"{m.predicted_signals_matched}/{m.predicted_signals_total} predicted"),
+        ("Type Accuracy", pct(m.type_matches, m.type_total),
+         TARGETS["type_accuracy"],
+         f"{m.type_matches}/{m.type_total} matched pairs"),
+    ]
+    if reasoning is not None:
+        rows.append((
+            "Reasoning matches answer",
+            pct(reasoning.signals_passed, reasoning.signals_total),
+            REASONING_TARGET,
+            f"{reasoning.signals_passed}/{reasoning.signals_total} signals",
+        ))
+
+    lines = ["| Dimension | Rate | Target | Floor | Result | Detail |",
+             "|---|---:|---:|---:|:---:|---|"]
+    for name, rate, (target, floor), detail in rows:
+        lines.append(
+            f"| {name} | {rate*100:.1f}% | {target*100:.0f}% | {floor*100:.0f}% "
+            f"| **{verdict(rate, target, floor)}** | {detail} |"
+        )
+    return "\n".join(lines)
+
+
+def write_summary(
+    m: Metrics,
+    reasoning: ReasoningMetrics | None,
+    results: list[ResultFile],
+    scope_desc: str,
+) -> None:
+    """Render summary.md with eval metrics + Mermaid charts."""
+    dist = _distributions(results)
+
+    # Chart 1: pass rates across all eval dimensions
+    pass_labels = ["Evidence", "ObsType", "Recall", "Precision", "TypeAcc"]
+    pass_values: list[float] = [
+        pct(m.eg_passed, m.eg_total) * 100,
+        pct(m.ot_passed, m.ot_total) * 100,
+        pct(m.golden_signals_matched, m.golden_signals_total) * 100,
+        pct(m.predicted_signals_matched, m.predicted_signals_total) * 100,
+        pct(m.type_matches, m.type_total) * 100,
+    ]
+    if reasoning is not None:
+        pass_labels.append("Reasoning")
+        pass_values.append(pct(reasoning.signals_passed, reasoning.signals_total) * 100)
+    pass_chart = _mermaid_bar(
+        "Eval Dimension Pass Rates (%)",
+        pass_labels, pass_values, "Pass %", y_max=100,
+    )
+
+    # Chart 2: signal type distribution
+    type_order = ["behavioral_evidence", "emotional_indicator",
+                  "context_marker", "concern_flag"]
+    type_labels = [t.replace("_", " ") for t in type_order]
+    type_values = [float(dist["type_counts"].get(t, 0)) for t in type_order]
+    type_chart = _mermaid_bar(
+        "Signal Type Distribution", type_labels, type_values, "Signals",
+    )
+
+    # Chart 3: confidence distribution
+    conf_order = ["high", "medium", "low"]
+    conf_values = [float(dist["confidence_counts"].get(c, 0)) for c in conf_order]
+    conf_chart = _mermaid_bar(
+        "Observation Confidence Distribution", conf_order, conf_values, "Signals",
+    )
+
+    # Chart 4: signals-per-observation histogram
+    spo: dict[int, int] = dist["signals_per_obs"]
+    max_n = max(spo.keys()) if spo else 0
+    spo_labels = [str(i) for i in range(max_n + 1)]
+    spo_values = [float(spo.get(i, 0)) for i in range(max_n + 1)]
+    spo_chart = _mermaid_bar(
+        "Signals per Observation", spo_labels, spo_values, "Observations",
+    )
+
+    # Chart 5: SEL competency frequency
+    sel_order = ["self_awareness", "self_management", "social_awareness",
+                 "relationship_skills", "responsible_decision_making"]
+    sel_labels = ["self-aware", "self-mgmt", "social-aware",
+                  "rel-skills", "resp-decide"]
+    sel_values = [float(dist["sel_counts"].get(s, 0)) for s in sel_order]
+    sel_chart = _mermaid_bar(
+        "SEL Competency Frequency", sel_labels, sel_values, "Signal mentions",
+    )
+
+    obs_ind = dist["obs_type_counts"].get("individual", 0)
+    obs_grp = dist["obs_type_counts"].get("group", 0)
+    total_signals = sum(dist["type_counts"].values())
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    header_line = (
+        f"**{len(results)} observations scored · {total_signals} signals extracted · "
+        f"{obs_ind} individual / {obs_grp} group**"
+    )
+    body = f"""# Layer 1 Evaluation Summary
+
+_Generated {timestamp} — scope: {scope_desc}_
+
+{header_line}
+
+## Metrics
+
+{_metrics_table(m, reasoning)}
+
+## Pass Rates
+
+{pass_chart}
+
+## Signal Mix
+
+{type_chart}
+
+{conf_chart}
+
+## Density
+
+{spo_chart}
+
+## SEL Competencies
+
+{sel_chart}
+"""
+    SUMMARY_PATH.write_text(body)
 
 
 # ---------------------------------------------------------------------------
@@ -890,8 +981,19 @@ def main() -> None:
           f"({len(golden_by_key)} golden annotations available)")
     report(m, show_failures=args.show_failures)
 
+    reasoning_metrics: ReasoningMetrics | None = None
     if args.audit_reasoning:
-        run_reasoning_audit(results, golden_by_key, args)
+        reasoning_metrics = run_reasoning_audit(results, golden_by_key, args)
+
+    scope_desc = (
+        f"first {args.golden} golden examples"
+        if args.golden is not None
+        else f"all {len(results)} results"
+    )
+    if args.audit_reasoning and not args.dry_run:
+        scope_desc += " (with reasoning audit)"
+    write_summary(m, reasoning_metrics, results, scope_desc)
+    print(f"\nWrote {SUMMARY_PATH}")
 
 
 if __name__ == "__main__":
