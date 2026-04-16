@@ -151,17 +151,97 @@ Student Count: 4
     }
   ]
 
-## Example 10 (update this)
+## Example 10
 
 **Input**
 Observation: "Andrei experienced some difficulty during Art and chose to take a break outside, where he was able to express that he was feeling overwhelmed. He shared that he sometimes finds it hard to manage when many things are happening around him and that he worries about making mistakes. Through one-on-one support, Andrei was able to re-engage in the activity and gradually took more ownership of his choices-selecting his own colors and deciding which shapes to focus on in his drawing. His statement, ""Once I finish this drawing, I have three more shapes,"" showed a shift toward planning and a growing sense of self-direction. Andrei is developing emotional awareness and learning to build trust in his own decision-making."
 Student Count: 1
 
-## Example 11 (Update this)
+**Output**
+"signals": [
+    {
+      "evidence": "chose to take a break outside",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "confidence": "high"
+    },
+    {
+      "evidence": "where he was able to express that he was feeling overwhelmed",
+      "type": "emotional_indicator",
+      "sel_competencies": ["self_awareness", "self_management"],
+      "confidence": "high"
+    },
+    {
+      "evidence": "He shared that he sometimes finds it hard to manage when many things are happening around him and that he worries about making mistakes",
+      "type": "emotional_indicator ",
+      "sel_competencies": ["self_awareness"],
+      "confidence": "high"
+    },
+    {
+      "evidence": "Through one-on-one support, Andrei was able to re-engage in the activity",
+      "type": "behavioral_evidence ",
+      "sel_competencies": ["self_management"],
+      "confidence": "high"
+    },
+    {
+      "evidence": "selecting his own colors and deciding which shapes to focus on in his drawing",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "confidence": "high"
+    },
+    {
+      "evidence": """Once I finish this drawing, I have three more shapes,""",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "confidence": "high"
+    },
+    {
+      "evidence": "Andrei is developing emotional awareness and learning to build trust in his own decision-making",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management", "self_awareness"],
+      "confidence": "low"
+    }
+  ]
+
+## Example 11
 
 **Input**
 Observation: "George did a great job tying the ""coada vacii"" knot on his own, showing confidence in his ability. When it came to the sliding knot, he initially became frustrated and upset when he realized he couldn't do it by himself. He walked away and said he didn't know how to complete the knot, and even though we discussed the importance of progress and perseverance, George had a hard time coming back to try again, even with help. This is an important learning moment for George, as he is still developing his ability to manage frustration and persist through challenges."
 Student Count: 1
+
+**Output**
+"signals": [
+    {
+      "evidence": "tying the ""coada vacii"" knot on his own",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "confidence": "high"
+    },
+    {
+      "evidence": "When it came to the sliding knot, he initially became frustrated and upset when he realized he couldn’t do it by himself",
+      "type": "emotional_indicator",
+      "sel_competencies": [],
+      "confidence": "high"
+    },
+    {
+      "evidence": "He walked away and said he didn’t know how to complete the knot",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "confidence": "high"
+    },
+    {
+      "evidence": "George had a hard time coming back to try again, even with help",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "confidence": "medium"
+    },
+    {
+      "evidence": "he is still developing his ability to manage frustration and persist through challenges",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "confidence": "low"
+    }
+  ]
 
 ## Example 12
 
