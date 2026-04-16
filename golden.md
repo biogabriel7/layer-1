@@ -5,7 +5,8 @@
       "sel_competencies": ["self_management", "social_awareness", "..."],
       "observation_confidence": "high | medium | low"
     }
-    ]
+  ]
+
 
 ## Example 1 +
 
@@ -21,7 +22,7 @@ Student Count: 1
       "sel_competencies": [],
       "observation_confidence": "low"
     }
-    ]
+  ]
 
 ## Example 2 +
 
@@ -44,9 +45,9 @@ Student Count: 1
       "evidence": "She was quiet today.",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "observation_confidence": "medium"
+      "observation_confidence": "low"
     }
-    ]
+  ]
 
 ## Example 4 +
 
@@ -62,7 +63,7 @@ Student Count: 1
       "sel_competencies": ["self_management", "social_awareness", "..."],
       "observation_confidence": "high"
     }
-    ]
+  ]
 
 ## Example 5+
 
@@ -78,7 +79,7 @@ Student Count: 1
       "sel_competencies": [],
       "observation_confidence": "medium"
     }
-    ]
+  ]
 
 ## Example 6+
 
@@ -94,7 +95,7 @@ Student Count: 1
       "sel_competencies": [],
       "observation_confidence": "low"
     }
-    ]
+  ]
 
 
 ## Example 7+
@@ -109,7 +110,7 @@ Student Count: 1
 ## Example 8+
 
 **Input**
-Observation: "Her commitment to collaborative learning is evident in her active participation and willingness to engage with peers."
+Observation: "Good collaboration with all his colleagues on the collaborative paint project"
 Student Count: 4
 
 **Output**
@@ -120,7 +121,7 @@ Student Count: 4
       "sel_competencies": ["relationship_skills"],
       "observation_confidence": "medium"
     }
-    ]
+  ]
 
 ## Example 9+
 
@@ -147,80 +148,240 @@ Student Count: 4
       "type": "behavioral_evidence",
       "sel_competencies": ["relationship_skills"],
       "observation_confidence": "medium"
-    },
-    ]
+    }
+  ]
 
-## Example 10
-
-**Input**
-Observation: "Ravi had a particularly challenging day and needed many reminders to stay focused, control his body, and pay attention during activities. We took time to talk about this together, and I reminded him that everyone has hard days and that asking for help is always okay. When we reflected as a group about who had followed the activity instructions, Ravi was honest and shared that he hadn't. I appreciated his honesty very much. It shows that he is learning to recognize his own feelings and choices, which is an important part of growing. With continued support and encouragement, Ravi is developing the self-awareness and courage he needs to manage difficult moments."
-Student Count: 1
-
-## Example 11
+## Example 10 (update this)
 
 **Input**
-Observation: "Children learned more about weaving by creating a small rug for toy animals. For Andrei, making mistakes felt overwhelming, and he became frustrated and tearful. However, with encouragement and a bit of support from the adult, he was able to continue, making him the first to finish it. This made him feel proud. With encouragement, Andrei is able to trust his abilities and keep going."
+Observation: "During the Tribe Meet, Romeo chose not to join the game we played. This attitude wasn't new, but after about ten minutes he decided to join, and his colleagues welcomed him. I saw Romeo having fun in the game, and he seemed to enjoy being part of the team. Later, when we walked back to school, I asked him how the experience felt. He told me that he enjoyed it, but at the beginning he was bored and didn't want to take part. His main concern was that he can't find his own place in the tribe, which makes him feel like he doesn't like the group. I encouraged him to get more involved in the games we play and to be a bit more open with his crew members. Many activities are designed to help the group connect and collaborate. By participating, he can make new friends and slowly find his own place in the tribe."
 Student Count: 1
 
-## Example 12
+## Example 11 (Update this)
+
+**Input**
+Observation: "Jasmine had difficulty grasping the decomposing method at first, as she wasn't fully engaged during the group activity. However, after one-on-one support, she understood the concept. She was able to decompose numbers from 2 to 6 by herself but eventually became frustrated and started crying, saying she ""can't do hard things."" She tends to get discouraged easily when working alone and needs encouragement to build resilience and confidence in tackling challenges."
+Student Count: 1
+
+## Example 12+
 
 **Input**
 Observation: "He completed all ten multiplication problems correctly and finished before the time limit. He showed his work clearly on each problem using the standard algorithm."
 Student Count: 1
 
-## Example 13
+**Output**
+"signals": [
+    {
+      "evidence": "He completed all ten multiplication problems correctly",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "finished before the time limit",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 13+
 
 **Input**
 Observation: "She read the passage aloud with proper intonation and paused at punctuation marks. She answered three out of four comprehension questions correctly."
 Student Count: 1
 
-## Example 14
+**Output**
+"signals": [
+    {
+      "evidence": "She read the passage aloud with proper intonation and paused at punctuation marks",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "She answered three out of four comprehension questions correctly",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 14+
 
 **Input**
 Observation: "He identified all the continents on the map without assistance and correctly labeled the oceans. He is beginning to understand longitude and latitude coordinates."
 Student Count: 1
 
-## Example 15
+**Output**
+"signals": [
+    {
+      "evidence": "He identified all the continents on the map without assistance and correctly labeled the oceans",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He is beginning to understand longitude and latitude coordinates",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "medium"
+    }
+  ]
+
+## Example 15+
 
 **Input**
 Observation: "She sorted the shapes into categories by number of sides and correctly identified triangles, quadrilaterals, and pentagons. She needed guidance to distinguish between regular and irregular polygons."
 Student Count: 1
 
-## Example 16
+**Output**
+"signals": [
+    {
+      "evidence": "She sorted the shapes into categories by number of sides",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "correctly identified triangles, quadrilaterals, and pentagons",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "She needed guidance to distinguish between regular and irregular polygons",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 16+
 
 **Input**
 Observation: "He wrote a complete paragraph with a topic sentence, three supporting details, and a concluding sentence. His spelling was accurate and he used punctuation correctly throughout."
 Student Count: 1
 
-## Example 17
+**Output**
+"signals": [
+    {
+      "evidence": ""He wrote a complete paragraph with a topic sentence, three supporting details, and a concluding sentence",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "His spelling was accurate and he used punctuation correctly throughout",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 17+
 
 **Input**
 Observation: "Marcus has been consistently late to class for the past two weeks. When he arrives, he often puts his head down on the desk and does not respond when called on. Today he refused to open his notebook and said he doesn't care about the assignment."
 Student Count: 1
 
-## Example 18
+**Output**
+"signals": [
+    {
+      "evidence": "Marcus has been consistently late to class for the past two weeks",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "When he arrives, he often puts his head down on the desk and does not respond when called on. Today he refused to open his notebook and said he doesn't care about the assignment",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 18+
 
 **Input**
 Observation: "During recess, Lily sat alone on the bench and cried when another student approached her. She said she has no friends and nobody wants to play with her. This is the third time this week she has isolated herself during free time."
 Student Count: 1
 
-## Example 19
+**Output**
+"signals": [
+    {
+      "evidence": "During recess",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "Lily sat alone on the bench and cried when another student approached her. She said she has no friends and nobody wants to play with her. This is the third time this week she has isolated herself during free time.",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 19+
 
 **Input**
 Observation: "Ethan pushed another student out of line during lunch and then argued loudly with the teacher when asked to apologize. He kicked a chair on the way to his seat. Later, he told me he was angry because someone took his spot."
 Student Count: 1
 
-## Example 20
+**Output**
+"signals": [
+    {
+      "evidence": "Ethan pushed another student out of line during lunch and then argued loudly with the teacher when asked to apologize. He kicked a chair on the way to his seat.",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": " Later, he told me he was angry because someone took his spot.",
+      "type": "emotional_indicator",
+      "sel_competencies": ["self_awareness"],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 20+
 
 **Input**
 Observation: "Her reading level has dropped from Level M to Level J since the beginning of the semester. She avoids reading aloud and frequently says she hates reading. During independent reading time she flips through pages without actually reading."
 Student Count: 1
 
-## Example 21
+**Output**
+"signals": [
+    {
+      "evidence": "Her reading level has dropped from Level M to Level J since the beginning of the semester. She avoids reading aloud and frequently says she hates reading. During independent reading time she flips through pages without actually reading.",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+  ]
+
+## Example 21+
 
 **Input**
 Observation: "Before every test, Sofia asks to go to the bathroom multiple times and complains of stomach aches. Today she started shaking her hands and breathing rapidly when I distributed the papers. She managed to complete the test but only after I sat with her for the first five minutes."
 Student Count: 1
+
+**Output**
+"signals": [
+    {
+      "evidence": "Before every test, Sofia asks to go to the bathroom multiple times and complains of stomach aches. Today she started shaking her hands and breathing rapidly when I distributed the papers",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "She managed to complete the test but only after I sat with her for the first five minutes.",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "observation_confidence": "high"
+    }
+  ]
 
 ## Example 22
 
@@ -228,119 +389,620 @@ Student Count: 1
 Observation: "During the partner reading activity, Noah repeatedly told his partner that she was reading too slowly and grabbed the book from her. When I intervened, he crossed his arms and refused to continue. He has had similar conflicts with partners in three of the last four sessions."
 Student Count: 1
 
-## Example 23
+**Output**
+"signals": [
+    {
+      "evidence": "During the partner reading activity",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "Noah repeatedly told his partner that she was reading too slowly and grabbed the book from her. When I intervened, he crossed his arms and refused to continue. He has had similar conflicts with partners in three of the last four sessions",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+
+
+## Example 23+
 
 **Input**
 Observation: "Aiden has stopped raising his hand in class entirely. He used to be one of the most active participants but now stares at his desk. When I asked him privately if something was wrong, he shrugged and said everything is fine."
 Student Count: 1
 
-## Example 24
+**Output**
+"signals": [
+    {
+      "evidence": "Aiden has stopped raising his hand in class entirely. He used to be one of the most active participants but now stares at his desk",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "When I asked him privately if something was wrong, he shrugged and said everything is fine.",
+      "type": "emotional_indicator",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 24+
 
 **Input**
 Observation: "During circle time, Mia repeatedly interrupted other students and could not sit still. She left her spot four times without permission and knocked over another student's water bottle. She apologized each time but continued the behavior."
 Student Count: 1
 
-## Example 25
+**Output**
+"signals": [
+    {
+      "evidence": "During circle time",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "Mia repeatedly interrupted other students and could not sit still. She left her spot four times without permission and knocked over another student's water bottle. She apologized each time but continued the behavior",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+  ]
+
+## Example 25+
 
 **Input**
 Observation: "The crew worked together on a mural project. They discussed color choices democratically and took turns painting different sections. When one member accidentally smudged another's section, they resolved it calmly by offering to help fix it."
 Student Count: 6
 
-## Example 26
+**Output**
+"signals": [
+    {
+      "evidence": "They discussed color choices democratically",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["relationship_skills"],
+      "observation_confidence": "medium"
+    },
+    {
+      "evidence": "took turns painting different sections",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["relationship_skills"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "When one member accidentally smudged another's section, they resolved it calmly by offering to help fix it.",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["relationship_skills", "social_awareness", "responsible_decision_making"],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 26+
 
 **Input**
 Observation: "During our exploration of the sense of smell, they actively participated in a sensory activity where they matched different scents to corresponding cards, strengthening their observation and identification skills. They also enjoyed creating a model ""nose"" using condiments of their choice, thoughtfully selecting scents based on personal preference. Through discussion, they developed an understanding of the close connection between smell and taste and how the absence of one sense can influence overall sensory experience."
 Student Count: 21
 
-## Example 27
+**Output**
+"signals": [
+    {
+      "evidence": "During our exploration of the sense of smell, they actively participated in a sensory activity where they matched different scents to corresponding cards ... They also enjoyed creating a model ""nose"" using condiments of their choice, thoughtfully selecting scents based on personal preference",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "Through discussion, they developed an understanding of the close connection between smell and taste and how the absence of one sense can influence overall sensory experience.",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "low"
+    }
+  ]
+
+## Example 27+
 
 **Input**
 Observation: "Throughout the week we played a game where the Lower Middle crew split into different teams. We exercised strategic thinking, patience, following the rules, collaboration with teammates. Most students told me that the game was fun and exciting, but some said it was stressful and intense. Overall, the Lower Middle showed that they can collaborate and compete without getting upset."
 Student Count: 15
 
-## Example 28
+**Output**
+"signals": [
+    {
+      "evidence": "Throughout the week we played a game where the Lower Middle crew split into different teams",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "the Lower Middle showed that they can collaborate and compete without getting upset.",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management", "relationship_skills"],
+      "observation_confidence": "medium"
+    }
+  ]
+
+## Example 28+
 
 **Input**
 Observation: "Crew Meet was a great opportunity to practice focus skills with the Upper Primary crew. We played a game called ""Hocus Pocus, Everybody Focus."" From my perspective, the children were more focused than last week. All members of the crew participated, and at the end they told me that the game was both playful and useful. Together, we acknowledged that focus is an important skill that helps us beyond school."
 Student Count: 15
 
-## Example 29
+**Output**
+"signals": [
+    {
+      "evidence": "We played a game called ""Hocus Pocus, Everybody Focus."" ",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "medium"
+    },
+    {
+      "evidence": "the children were more focused than last week",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "low"
+    },
+    {
+      "evidence": "All members of the crew participated",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["relationship_skills"],
+      "observation_confidence": "medium"
+    },
+    {
+      "evidence": "they told me that the game was both playful and useful",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 29+
 
 **Input**
 Observation: "Today in class they were exploring equivalent fractions with coloured blocks and applying their findings to answer questions related to equivalent fractions."
 Student Count: 14
 
-## Example 30
+**Output**
+"signals": [
+    {
+      "evidence": "Today in class they were exploring equivalent fractions with coloured blocks and applying their findings to answer questions related to equivalent fractions.",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 30+
 
 **Input**
 Observation: "Today the Upper Primary Crew exercised their independent learning skills when working together analysing data that compared food waste per capita in various countries around the world. They needed to apply their knowledge of fractions, and apply basic numeracy skills to a real world context effectively."
 Student Count: 13
 
-## Example 31
+**Output**
+"signals": [
+    {
+      "evidence": "Today the Upper Primary Crew exercised their independent learning skills when working together analysing data that compared food waste per capita in various countries around the world",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 31+
 
 **Input**
 Observation: "The learners from the upper primary crew were deeply engaged in exploring even and odd numbers through play. By using body movements and Lego blocks, they successfully identified even and odd patterns and discovered the rules for adding and subtracting even and odd numbers. They remained fully present, enthusiastic, and eager to delve deeper into their mathematical discoveries."
 Student Count: 12
 
-## Example 32
+**Output**
+"signals": [
+    {
+      "evidence": "The learners from the upper primary crew were deeply engaged in exploring even and odd numbers through play. By using body movements and Lego blocks,",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "they successfully identified even and odd patterns and discovered the rules for adding and subtracting even and odd numbers",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "medium"
+    },
+    {
+      "evidence": "They remained fully present, enthusiastic, and eager to delve deeper into their mathematical discoveries.",
+      "type": "emotional_indicator",
+      "sel_competencies": ["self_management", "social_awareness", "..."],
+      "observation_confidence": "low"
+    }
+  ]
+
+## Example 32+
 
 **Input**
 Observation: "During the folder-making activity, the learners were engaged and showed great interest. They were able to give and receive constructive feedback, felt happy to share with their classmates, and were proud to present their work to their peers."
 Student Count: 12
 
-## Example 33
+**Output**
+"signals": [
+    {
+      "evidence": "During the folder-making activity",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "the learners were engaged and showed great interest",
+      "type": "emotional_indicator",
+      "sel_competencies": [],
+      "observation_confidence": "low"
+    },
+    {
+      "evidence": "They were able to give and receive constructive feedback, felt happy to share with their classmates, and were proud to present their work to their peers.",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["relationship_skills"],
+      "observation_confidence": "medium"
+    }
+  ]
+
+## Example 33+
 
 **Input**
 Observation: "Elena participated enthusiastically in the art project and created a beautiful watercolor painting. However, when it was time to clean up, she refused to help and left her supplies on the table. She also told another student that their painting looked ugly, which made the other student cry."
 Student Count: 1
 
-## Example 34
+**Output**
+"signals": [
+    {
+      "evidence": "Elena participated enthusiastically in the art project",
+      "type": "emotional_indicator",
+      "sel_competencies": [],
+      "observation_confidence": "medium"
+    },
+    {
+      "evidence": "created a beautiful watercolor painting",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": " when it was time to clean up, she refused to help and left her supplies on the table",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "She also told another student that their painting looked ugly, which made the other student cry",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 34+
 
 **Input**
 Observation: "Oscar showed great initiative by volunteering to be the group leader for the history project. He organized the research materials and assigned roles to each team member. However, he became frustrated when his teammates suggested changes to his plan and dismissed their ideas without listening. By the end of the session, he acknowledged that he should have been more open to others' suggestions."
 Student Count: 1
 
-## Example 35
+**Output**
+"signals": [
+    {
+      "evidence": "volunteering to be the group leader for the history project",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He organized the research materials and assigned roles to each team member",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "he became frustrated when his teammates suggested changes to his plan",
+      "type": "emotional_indicator",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "dismissed their ideas without listening",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "By the end of the session, he acknowledged that he should have been more open to others' suggestions",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_awareness","socail_awareness", "responsible_decision_making"],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 35+
 
 **Input**
 Observation: "Priya excelled in the math assessment, scoring 100% on the fractions unit test. She helped two classmates who were struggling with the concept. Later in the day, however, she got into a verbal argument with a classmate during PE and refused to participate for the rest of the period."
 Student Count: 1
 
-## Example 36
+**Output**
+"signals": [
+    {
+      "evidence": "scoring 100% on the fractions unit test",
+      "type": "behavioral_evidence ",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "She helped two classmates who were struggling with the concept",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["social_awareness", "relationship_skills"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "Later in the day, however, she got into a verbal argument with a classmate during PE and refused to participate for the rest of the period.",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 36+
 
 **Input**
 Observation: "James made excellent progress on his writing assignment and produced a well-structured essay with a clear thesis. He was focused and productive during the first half of class. After the break, though, he kept distracting his neighbor by talking and had to be moved to a different seat twice."
 Student Count: 1
 
-## Example 37
+**Output**
+"signals": [
+    {
+      "evidence": "produced a well-structured essay with a clear thesis",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He was focused and productive during the first half of class",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "observation_confidence": "medium"
+    },
+    {
+      "evidence": "After the break, though, he kept distracting his neighbor by talking and had to be moved to a different seat twice.",
+      "type": "concern_flag",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 37+
 
 **Input**
 Observation: "Zara showed strong leadership during the group debate, presenting her arguments clearly and respectfully. She listened to opposing viewpoints and asked thoughtful follow-up questions. However, when her team lost the debate, she blamed her teammates publicly and said they didn't prepare enough."
 Student Count: 1
 
-## Example 38
+**Output**
+"signals": [
+    {
+      "evidence": "during the group debate",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "presenting her arguments clearly and respectfully",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management", "social_awareness"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "She listened to opposing viewpoints and asked thoughtful follow-up questions",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["social_awareness", "relationship_skills"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "when her team lost the debate, she blamed her teammates publicly and said they didn't prepare enough",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 38+
 
 **Input**
 Observation: "During the outdoor education session at the nature reserve, Kai demonstrated exceptional curiosity by asking questions about every plant species we encountered. He carefully sketched three different leaf shapes in his journal and labeled them correctly. He shared his magnifying glass with a classmate who had forgotten theirs and explained how to use it properly. When we reached the stream crossing, he hesitated but encouraged himself by saying 'I can do this' before stepping across. He then turned around and offered his hand to help the next student across. At the end of the trip, he told me it was the best day of school ever."
 Student Count: 1
 
-## Example 39
+**Output**
+"signals": [
+    {
+      "evidence": "During the outdoor education session at the nature reserve",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "Kai demonstrated exceptional curiosity",
+      "type": "emotional_indicator",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "asking questions about every plant species we encountered",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He carefully sketched three different leaf shapes in his journal and labeled them correctly",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He shared his magnifying glass with a classmate who had forgotten theirs and explained how to use it properly",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["social_awareness", "relationship_skills"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "When we reached the stream crossing, he hesitated but encouraged himself by saying 'I can do this' before stepping across",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He then turned around and offered his hand to help the next student across",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["social_awareness"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "At the end of the trip, he told me it was the best day of school ever",
+      "type": "emotional_indicator",
+      "sel_competencies": ["responsible_decision_making"],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 39+
 
 **Input**
 Observation: "In today's creative writing workshop, Amara chose to write a story about a girl who overcomes her fear of public speaking. She spent extra time planning her story structure before writing. Her narrative included vivid descriptions and dialogue that showed character development. She voluntarily read her story aloud to the class, which is something she has never done before. After reading, she accepted feedback from her peers gracefully and even thanked a classmate who pointed out a spelling error. She told me she felt proud of herself for reading out loud."
 Student Count: 1
 
-## Example 40
+**Output**
+"signals": [
+    {
+      "evidence": "In today's creative writing workshop",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "Amara chose to write a story about a girl who overcomes her fear of public speaking",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "She spent extra time planning her story structure before writing",
+      "type": "behavioral_evidence ",
+      "sel_competencies": ["self_management"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "Her narrative included vivid descriptions and dialogue that showed character development",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "She voluntarily read her story aloud to the class, which is something she has never done before",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "After reading, she accepted feedback from her peers gracefully and even thanked a classmate who pointed out a spelling error",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_awareness", "social_awareness", "relationship_skills"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "She told me she felt proud of herself for reading out loud",
+      "type": "emotional_indicator",
+      "sel_competencies": ["self_awareness", "social_awareness", "responsible_decision_making"],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 40+
 
 **Input**
 Observation: "During the science fair preparation, Leo designed his experiment independently, created a hypothesis, set up the materials, and recorded his observations systematically. He explained his findings to visitors using scientific vocabulary. He also helped a younger student set up their display board."
 Student Count: 1
 
-## Example 41
+**Output**
+"signals": [
+    {
+      "evidence": "During the science fair preparation",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "Leo designed his experiment independently, created a hypothesis, set up the materials, and recorded his observations systematically",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He explained his findings to visitors using scientific vocabulary",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["relationship_skills"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He also helped a younger student set up their display board",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["social_awareness"],
+      "observation_confidence": "high"
+    }
+  ]
+
+## Example 41+
 
 **Input**
 Observation: "During the cooking session, Tomas followed the recipe step by step without needing prompts. He measured the ingredients accurately using cups and spoons. He waited patiently for his turn to use the mixer. When a classmate spilled flour, he immediately grabbed a cloth and helped clean it up without being asked. He tasted the final product and said it was 'the best thing I ever made.' He suggested we should do cooking more often and even asked if he could take the recipe home to make it with his family."
 Student Count: 1
+
+**Output**
+"signals": [
+    {
+      "evidence": "During the cooking session",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "Tomas followed the recipe step by step without needing prompts",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He measured the ingredients accurately using cups and spoons",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He waited patiently for his turn to use the mixer",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "When a classmate spilled flour, he immediately grabbed a cloth and helped clean it up without being asked",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["social_awareness", ""self_management""],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He tasted the final product and said it was 'the best thing I ever made.'",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_awareness"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He suggested we should do cooking more often and even asked if he could take the recipe home to make it with his family.",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_awareness"],
+      "observation_confidence": "high"
+    }
+  ]
 
 ## Example 42
 
@@ -348,11 +1010,49 @@ Student Count: 1
 Observation: "She confidently presented her book report to the class, making eye contact with the audience and speaking clearly. She answered questions from her classmates thoughtfully. She recommended the book to others and explained why she connected with the main character. She also created an illustrated cover for her report without being asked."
 Student Count: 1
 
+**Output**
+"signals": [
+    {
+      "evidence": "She confidently presented her book report to the class, making eye contact with the audience and speaking clearly",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["relationship_skills"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "She answered questions from her classmates thoughtfully",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["relatioship_skills"],
+      "observation_confidence": "medium"
+    },
+    {
+      "evidence": "She recommended the book to others and explained why she connected with the main character",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["relatioship_skills", "self_awareness"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "She also created an illustrated cover for her report without being asked",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "observation_confidence": "high"
+    },
+  ]
+
 ## Example 43
 
 **Input**
 Observation: "He did okay today."
 Student Count: 1
+
+**Output**
+"signals": [
+    {
+      "evidence": "He did okay today",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "low"
+    }
+  ]
 
 ## Example 44
 
@@ -360,11 +1060,31 @@ Student Count: 1
 Observation: "She was fine during class."
 Student Count: 1
 
+**Output**
+"signals": [
+    {
+      "evidence": "She was fine during class.",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "low"
+    }
+  ]
+
 ## Example 45
 
 **Input**
 Observation: "Average performance this week."
 Student Count: 1
+
+**Output**
+"signals": [
+    {
+      "evidence": "Average performance this week.",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "low"
+    }
+  ]
 
 ## Example 46
 
@@ -372,11 +1092,24 @@ Student Count: 1
 Observation: "Nothing notable to report."
 Student Count: 1
 
+**Output**
+"signals": []
+
 ## Example 47
 
 **Input**
 Observation: "Continues to make progress."
 Student Count: 1
+
+**Output**
+"signals": [
+    {
+      "evidence": "Continues to make progress.",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "low"
+    }
+  ]
 
 ## Example 48
 
@@ -384,11 +1117,49 @@ Student Count: 1
 Observation: "He is developing strong problem-solving and engineering skills by building structures using simple materials like spaghetti, marshmallows, and Magna-Tiles. He can observe how smaller parts come together to form a stable dome and explore how shapes and connections affect a structure's strength."
 Student Count: 1
 
+**Output**
+"signals": [
+    {
+      "evidence": "building structures using simple materials like spaghetti, marshmallows, and Magna-Tiles",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He can observe how smaller parts come together to form a stable dome and explore how shapes and connections affect a structure's strength",
+      "type": "behavioral_evidence",
+      "sel_competencies": [],
+      "observation_confidence": "medium"
+    }
+  ]
+
 ## Example 49
 
 **Input**
 Observation: "After the math test, she came to me and said she felt really disappointed because she knew she could have done better if she had studied more. She asked if she could retake it after practicing at home."
 Student Count: 1
+
+**Output**
+"signals": [
+    {
+      "evidence": "After the math test",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "she came to me and said she felt really disappointed because she knew she could have done better if she had studied more",
+      "type": "emotional_indicator",
+      "sel_competencies": ["self_awareness", "responsible_decision_making"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "She asked if she could retake it after practicing at home.",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "observation_confidence": "high"
+    }
+  ]
 
 ## Example 50
 
@@ -396,11 +1167,49 @@ Student Count: 1
 Observation: "At the beginning of the week, he set a personal goal to finish his chapter book by Friday. Each day he tracked his progress on the reading chart and adjusted his daily page target. He finished the book on Thursday, one day early, and immediately started a new one."
 Student Count: 1
 
+**Output**
+"signals": [
+    {
+      "evidence": "At the beginning of the week",
+      "type": "context_marker",
+      "sel_competencies": [],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "he set a personal goal to finish his chapter book by Friday",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management",],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "Each day he tracked his progress on the reading chart and adjusted his daily page target",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "observation_confidence": "high"
+    },
+    {
+      "evidence": "He finished the book on Thursday, one day early, and immediately started a new one.",
+      "type": "behavioral_evidence",
+      "sel_competencies": ["self_management"],
+      "observation_confidence": "high"
+    }
+  ]
+
 ## Example 51
 
 **Input**
 Observation: "During the collaborative poster project, she actively listened to each team member's ideas before offering her own suggestions. When two teammates disagreed about the design, she mediated the conflict by proposing a compromise that incorporated elements from both ideas. She made sure everyone had a role and checked in with quieter members to ask for their input."
 Student Count: 1
+
+**Output**
+"signals": [
+    {
+      "evidence": "exact verbatim quote from observation",
+      "type": "behavioral_evidence | emotional_indicator | context_marker | mastery_signal | concern_flag",
+      "sel_competencies": ["self_management", "social_awareness", "..."],
+      "observation_confidence": "high | medium | low"
+    }
+  ]
 
 ## Example 52
 
@@ -408,11 +1217,31 @@ Student Count: 1
 Observation: "When he found a wallet on the playground, he immediately brought it to me instead of keeping it or leaving it on the ground. He said he knew it belonged to someone and that they would be worried about it. He waited with me until we found the owner and was genuinely happy when the other student got their wallet back."
 Student Count: 1
 
+**Output**
+"signals": [
+    {
+      "evidence": "exact verbatim quote from observation",
+      "type": "behavioral_evidence | emotional_indicator | context_marker | mastery_signal | concern_flag",
+      "sel_competencies": ["self_management", "social_awareness", "..."],
+      "observation_confidence": "high | medium | low"
+    }
+  ]
+
 ## Example 53
 
 **Input**
 Observation: "She managed to master at least two skills at a 6th- and 7th-grade level of difficulty despite being in 4th grade. She independently solved multi-step word problems involving fractions and decimals without any scaffolding."
 Student Count: 1
+
+**Output**
+"signals": [
+    {
+      "evidence": "exact verbatim quote from observation",
+      "type": "behavioral_evidence | emotional_indicator | context_marker | mastery_signal | concern_flag",
+      "sel_competencies": ["self_management", "social_awareness", "..."],
+      "observation_confidence": "high | medium | low"
+    }
+  ]
 
 ## Example 54
 
@@ -420,11 +1249,31 @@ Student Count: 1
 Observation: "He is beginning to recognize letter sounds and can identify the first letter of his name. He needs support to hold the pencil correctly and is just starting to form recognizable letters."
 Student Count: 1
 
+**Output**
+"signals": [
+    {
+      "evidence": "exact verbatim quote from observation",
+      "type": "behavioral_evidence | emotional_indicator | context_marker | mastery_signal | concern_flag",
+      "sel_competencies": ["self_management", "social_awareness", "..."],
+      "observation_confidence": "high | medium | low"
+    }
+  ]
+
 ## Example 55
 
 **Input**
 Observation: "He showed great curiosity while exploring the food pyramid and learning about what kinds of foods are healthier to eat more often and which to enjoy less frequently. He was excited to try new flavors and recipes and saw the value of making healthy choices in daily life. During cooking sessions, he took leadership by reading the recipe steps aloud, guiding others in the process, and confidently applying math skills to measure quantities. His enthusiasm for cooking and understanding nutrition demonstrated a growing awareness of how food supports his overall development and well-being."
 Student Count: 1
+
+**Output**
+"signals": [
+    {
+      "evidence": "exact verbatim quote from observation",
+      "type": "behavioral_evidence | emotional_indicator | context_marker | mastery_signal | concern_flag",
+      "sel_competencies": ["self_management", "social_awareness", "..."],
+      "observation_confidence": "high | medium | low"
+    }
+  ]
 
 ## Example 56
 
@@ -432,11 +1281,31 @@ Student Count: 1
 Observation: "During our exploration of the sense of sight, they showed great curiosity and engagement while investigating optical illusions and using special goggles to understand how different animals see the world. They were excited to discover why animals perceive their surroundings differently from humans and asked thoughtful questions about how our eyes can sometimes ""trick"" us. Through these activities, they began developing an understanding of the biological processes behind vision and how perception works."
 Student Count: 21
 
+**Output**
+"signals": [
+    {
+      "evidence": "exact verbatim quote from observation",
+      "type": "behavioral_evidence | emotional_indicator | context_marker | mastery_signal | concern_flag",
+      "sel_competencies": ["self_management", "social_awareness", "..."],
+      "observation_confidence": "high | medium | low"
+    }
+  ]
+
 ## Example 57
 
 **Input**
 Observation: "He enjoyed walking through and understanding the hero's journey and found it exciting to write his own book following it. He was eager to bring in new characters, twists and the big challenge where good won over bad."
 Student Count: 1
+
+**Output**
+"signals": [
+    {
+      "evidence": "exact verbatim quote from observation",
+      "type": "behavioral_evidence | emotional_indicator | context_marker | mastery_signal | concern_flag",
+      "sel_competencies": ["self_management", "social_awareness", "..."],
+      "observation_confidence": "high | medium | low"
+    }
+  ]
 
 ## Example 58
 
@@ -444,17 +1313,47 @@ Student Count: 1
 Observation: "He actively engaged in hands-on investigations to explore how electricity works. Through trial and error, he successfully built simple circuits to light an LED or power a motor, showing curiosity, persistence, and a growing understanding of energy transfer. This experience helped strengthen both his scientific thinking and problem-solving skills."
 Student Count: 1
 
+**Output**
+"signals": [
+    {
+      "evidence": "exact verbatim quote from observation",
+      "type": "behavioral_evidence | emotional_indicator | context_marker | mastery_signal | concern_flag",
+      "sel_competencies": ["self_management", "social_awareness", "..."],
+      "observation_confidence": "high | medium | low"
+    }
+  ]
+
 ## Example 59
 
 **Input**
 Observation: "He explored geometry by measuring the sides and angles of the triangles used in their dome structure. This hands-on activity deepened his understanding of shapes, measurement, and how geometry is used in real-world structures. Measures most side lengths and angles with some guidance. Demonstrates a growing understanding of triangle properties and measurement tools."
 Student Count: 1
 
+**Output**
+"signals": [
+    {
+      "evidence": "exact verbatim quote from observation",
+      "type": "behavioral_evidence | emotional_indicator | context_marker | mastery_signal | concern_flag",
+      "sel_competencies": ["self_management", "social_awareness", "..."],
+      "observation_confidence": "high | medium | low"
+    }
+  ]
+
 ## Example 60
 
 **Input**
 Observation: "He is beginning to observe and describe how structures found in nature, such as beehives and pinecones, can inspire human design. He is developing an understanding of biomimicry by identifying patterns and shapes in the natural world and thinking about how these ideas might be used in real-world solutions."
 Student Count: 1
+
+**Output**
+"signals": [
+    {
+      "evidence": "exact verbatim quote from observation",
+      "type": "behavioral_evidence | emotional_indicator | context_marker | mastery_signal | concern_flag",
+      "sel_competencies": ["self_management", "social_awareness", "..."],
+      "observation_confidence": "high | medium | low"
+    }
+  ]
 
 ## Example 61
 
