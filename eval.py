@@ -215,26 +215,40 @@ def evidence_matches(a: str, b: str, threshold: float = 0.5) -> bool:
 
 
 def load_results() -> list[ResultFile]:
-    """Pair each result JSON with its source row in sample-obs.csv."""
+    """Pair each result JSON with its source observation (from sample-obs.csv
+    or golden.md, since extract.py can read either)."""
     if not RESULTS_DIR.exists():
         print(f"ERROR: {RESULTS_DIR}/ not found — run extract.py first", file=sys.stderr)
         sys.exit(1)
 
     # Index CSV by cache key so we can recover the observation text.
-    csv_index: dict[str, tuple[str, int]] = {}
+    # Skip malformed rows (e.g. unquoted observations that bleed across
+    # columns and leave student_count empty) — they can't have results.
+    obs_index: dict[str, tuple[str, int]] = {}
     with open(CSV_PATH, newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
             obs = row["observation"]
-            sc = int(row["student_count"])
-            csv_index[cache_key(obs, sc)] = (obs, sc)
+            try:
+                sc = int(row["student_count"])
+            except (ValueError, TypeError):
+                continue
+            obs_index[cache_key(obs, sc)] = (obs, sc)
+
+    # Also index golden.md observations so results extracted via
+    # `extract.py --golden N` can be recovered even if absent from the CSV.
+    for ex in parse_golden(GOLDEN_PATH):
+        obs_index.setdefault(
+            cache_key(ex.observation, ex.student_count),
+            (ex.observation, ex.student_count),
+        )
 
     results: list[ResultFile] = []
     for path in sorted(RESULTS_DIR.glob("*.json")):
         key = path.stem
-        if key not in csv_index:
-            # Orphaned result (observation no longer in CSV) — skip silently.
+        if key not in obs_index:
+            # Orphaned result (source observation no longer present) — skip.
             continue
-        obs, sc = csv_index[key]
+        obs, sc = obs_index[key]
         data = json.loads(path.read_text())
         signals_raw = data.get("signals", [])
         signals = [
