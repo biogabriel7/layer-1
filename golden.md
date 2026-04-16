@@ -110,16 +110,16 @@ Student Count: 1
 ## Example 8
 
 **Input**
-Observation: "Good collaboration with all his colleagues on the collaborative paint project"
+Observation: "Worked well with his teammates on the group poster design"
 Student Count: 4
 
 **Output**
 "signals": [
     {
-      "evidence": ""Good collaboration with all his colleagues on the collaborative paint project",
+      "evidence": "Worked well with his teammates on the group poster design",
       "type": "behavioral_evidence",
       "sel_competencies": ["relationship_skills"],
-      "observation_confidence": "medium"
+      "observation_confidence": "low"
     }
   ]
 
@@ -154,13 +154,13 @@ Student Count: 4
 ## Example 10 (update this)
 
 **Input**
-Observation: "During the Tribe Meet, Romeo chose not to join the game we played. This attitude wasn't new, but after about ten minutes he decided to join, and his colleagues welcomed him. I saw Romeo having fun in the game, and he seemed to enjoy being part of the team. Later, when we walked back to school, I asked him how the experience felt. He told me that he enjoyed it, but at the beginning he was bored and didn't want to take part. His main concern was that he can't find his own place in the tribe, which makes him feel like he doesn't like the group. I encouraged him to get more involved in the games we play and to be a bit more open with his crew members. Many activities are designed to help the group connect and collaborate. By participating, he can make new friends and slowly find his own place in the tribe."
+Observation: "During morning circle, Mateo refused to sit with the group and stood near the window while the other students settled in. This reluctance has been a pattern on most mornings this month. After I invited him a second time, he walked over and sat at the edge of the circle. By the middle of the activity, he had moved closer to his peers and was contributing answers when called on. I noticed him laughing along with jokes his crewmates shared. When we lined up for the next lesson, he told me that the mornings feel overwhelming because he doesn't know what we'll be doing each day. I encouraged him to ask questions when he feels uncertain rather than standing apart. Building comfort with transitions will help him feel more secure. His willingness to join in the end is progress compared to last week."
 Student Count: 1
 
 ## Example 11 (Update this)
 
 **Input**
-Observation: "Jasmine had difficulty grasping the decomposing method at first, as she wasn't fully engaged during the group activity. However, after one-on-one support, she understood the concept. She was able to decompose numbers from 2 to 6 by herself but eventually became frustrated and started crying, saying she ""can't do hard things."" She tends to get discouraged easily when working alone and needs encouragement to build resilience and confidence in tackling challenges."
+Observation: "Diego struggled with the regrouping strategy in subtraction at first, as he kept mixing up which column to borrow from. However, after working through two problems with me, he started applying the method correctly on his own. He solved four problems independently but then slammed his pencil down and said he ""hates math and will never get it."" He often gives up quickly when problems feel challenging and needs reassurance to keep trying."
 Student Count: 1
 
 ## Example 12
