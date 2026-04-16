@@ -758,11 +758,12 @@ def _format_divergent_examples(
     rm: ReasoningMetrics,
     results_by_key: dict[str, ResultFile],
     golden_by_key: dict[str, GoldenExample],
-    max_n: int = 10,
+    max_n: int = 5,
 ) -> str:
     """Markdown block showing the top-N observations where predicted and
     golden extractions diverge most. Each example includes the observation
-    text, judge differences, and predicted vs. golden signals side by side.
+    text, the judge's analysis, and the verbatim predicted vs. golden output
+    so reviewers can see the actual signals — not just a description.
     """
     ranked = [(k, gc) for k, gc in rm.gc_entries if gc.differences]
     if not ranked:
@@ -781,8 +782,6 @@ def _format_divergent_examples(
         shown += 1
 
         obs = result.observation
-        if len(obs) > 500:
-            obs = obs[:497] + "..."
 
         lines.append(f"### Example {shown}: `{key[:12]}`")
         lines.append("")
@@ -793,7 +792,7 @@ def _format_divergent_examples(
         lines.append("")
         lines.append(f"> {obs}")
         lines.append("")
-        lines.append("**Differences:**")
+        lines.append("**Judge analysis:**")
         lines.append("")
         for d in gc.differences:
             tag = d.verdict.upper().replace("_", " ")
@@ -802,15 +801,27 @@ def _format_divergent_examples(
             if d.likely_cause:
                 lines.append(f"  - _why:_ {d.likely_cause}")
         lines.append("")
-        lines.append(f"**Predicted signals ({len(result.signals)}):**")
-        for s in result.signals:
-            ev = s.evidence if len(s.evidence) <= 140 else s.evidence[:137] + "..."
-            lines.append(f"- `{s.type}` — {ev}")
+
+        # Load full predicted output (sel_competencies, observation_confidence,
+        # reasoning) from the cached result JSON. ResultFile.signals only
+        # carries evidence + type, which isn't enough for a direct comparison.
+        try:
+            raw_pred = json.loads((RESULTS_DIR / f"{key}.json").read_text())
+            predicted_full = raw_pred.get("signals", [])
+        except Exception:
+            predicted_full = []
+
+        lines.append(f"**Predicted output ({len(predicted_full)} signals):**")
         lines.append("")
-        lines.append(f"**Golden signals ({len(golden.signals)}):**")
-        for s in golden.signals:
-            ev = s.evidence if len(s.evidence) <= 140 else s.evidence[:137] + "..."
-            lines.append(f"- `{s.type}` — {ev}")
+        lines.append("```json")
+        lines.append(json.dumps(predicted_full, indent=2, ensure_ascii=False))
+        lines.append("```")
+        lines.append("")
+        lines.append(f"**Golden output ({len(golden.signals)} signals):**")
+        lines.append("")
+        lines.append("```text")
+        lines.append(golden.raw_output)
+        lines.append("```")
         lines.append("")
 
     if not lines:
@@ -844,6 +855,13 @@ def _format_golden_comparison(m: ReasoningMetrics, max_entries: int = 20) -> str
 
     if not m.gc_entries:
         lines.append("  (no meaningful differences reported)")
+        return "\n".join(lines)
+
+    if max_entries <= 0:
+        lines.append(
+            f"  {len(m.gc_entries)} observation(s) with differences — "
+            "see the Divergent Extractions section for full output comparisons."
+        )
         return "\n".join(lines)
 
     shown = m.gc_entries[:max_entries]
@@ -1115,7 +1133,7 @@ def _summary_report_block(m: Metrics, reasoning: ReasoningMetrics | None) -> str
         if rs_failures:
             sections += ["", rs_failures]
 
-        gc_block = _format_golden_comparison(reasoning)
+        gc_block = _format_golden_comparison(reasoning, max_entries=0)
         if gc_block:
             sections += ["", gc_block]
 

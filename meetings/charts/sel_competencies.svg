@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 320" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
 <text x="270" y="28" text-anchor="middle" font-size="16" font-weight="600">SEL Competency Frequency</text>
-<path d="M 160 175 L 160.00 55.00 A 120 120 0 0 1 269.43 125.75 Z" fill="#5b8def" stroke="white" stroke-width="2"/>
-<path d="M 160 175 L 269.43 125.75 A 120 120 0 0 1 110.75 284.43 Z" fill="#f08e3b" stroke="white" stroke-width="2"/>
-<path d="M 160 175 L 110.75 284.43 A 120 120 0 0 1 53.75 230.77 Z" fill="#52b788" stroke="white" stroke-width="2"/>
-<path d="M 160 175 L 53.75 230.77 A 120 120 0 0 1 110.75 65.57 Z" fill="#d36bd6" stroke="white" stroke-width="2"/>
-<path d="M 160 175 L 110.75 65.57 A 120 120 0 0 1 160.00 55.00 Z" fill="#e9c46a" stroke="white" stroke-width="2"/>
-<rect x="320" y="80" width="14" height="14" fill="#5b8def"/><text x="342" y="92" font-size="13" fill="#222">self-aware — 19 (18.3%)</text>
-<rect x="320" y="108" width="14" height="14" fill="#f08e3b"/><text x="342" y="120" font-size="13" fill="#222">self-mgmt — 40 (38.5%)</text>
-<rect x="320" y="136" width="14" height="14" fill="#52b788"/><text x="342" y="148" font-size="13" fill="#222">social-aware — 11 (10.6%)</text>
-<rect x="320" y="164" width="14" height="14" fill="#d36bd6"/><text x="342" y="176" font-size="13" fill="#222">rel-skills — 27 (26.0%)</text>
-<rect x="320" y="192" width="14" height="14" fill="#e9c46a"/><text x="342" y="204" font-size="13" fill="#222">resp-decide — 7 (6.7%)</text>
+<path d="M 160 175 L 160.00 55.00 A 120 120 0 0 1 271.04 129.51 Z" fill="#5b8def" stroke="white" stroke-width="2"/>
+<path d="M 160 175 L 271.04 129.51 A 120 120 0 0 1 112.79 285.32 Z" fill="#f08e3b" stroke="white" stroke-width="2"/>
+<path d="M 160 175 L 112.79 285.32 A 120 120 0 0 1 53.68 230.64 Z" fill="#52b788" stroke="white" stroke-width="2"/>
+<path d="M 160 175 L 53.68 230.64 A 120 120 0 0 1 109.38 66.20 Z" fill="#d36bd6" stroke="white" stroke-width="2"/>
+<path d="M 160 175 L 109.38 66.20 A 120 120 0 0 1 160.00 55.00 Z" fill="#e9c46a" stroke="white" stroke-width="2"/>
+<rect x="320" y="80" width="14" height="14" fill="#5b8def"/><text x="342" y="92" font-size="13" fill="#222">self-aware — 19 (18.8%)</text>
+<rect x="320" y="108" width="14" height="14" fill="#f08e3b"/><text x="342" y="120" font-size="13" fill="#222">self-mgmt — 38 (37.6%)</text>
+<rect x="320" y="136" width="14" height="14" fill="#52b788"/><text x="342" y="148" font-size="13" fill="#222">social-aware — 11 (10.9%)</text>
+<rect x="320" y="164" width="14" height="14" fill="#d36bd6"/><text x="342" y="176" font-size="13" fill="#222">rel-skills — 26 (25.7%)</text>
+<rect x="320" y="192" width="14" height="14" fill="#e9c46a"/><text x="342" y="204" font-size="13" fill="#222">resp-decide — 7 (6.9%)</text>
 </svg>
