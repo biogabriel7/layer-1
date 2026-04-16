@@ -110,13 +110,13 @@ Student Count: 1
 ## Example 8
 
 **Input**
-Observation: "Worked well with his teammates on the group poster design"
+Observation: "Her commitment to collaborative learning is evident in her active participation and willingness to engage with peers."
 Student Count: 4
 
 **Output**
 "signals": [
     {
-      "evidence": "Worked well with his teammates on the group poster design",
+      "evidence": "Her commitment to collaborative learning is evident in her active participation and willingness to engage with peers.",
       "type": "behavioral_evidence",
       "sel_competencies": ["relationship_skills"],
       "observation_confidence": "low"
@@ -154,13 +154,13 @@ Student Count: 4
 ## Example 10 (update this)
 
 **Input**
-Observation: "During morning circle, Mateo refused to sit with the group and stood near the window while the other students settled in. This reluctance has been a pattern on most mornings this month. After I invited him a second time, he walked over and sat at the edge of the circle. By the middle of the activity, he had moved closer to his peers and was contributing answers when called on. I noticed him laughing along with jokes his crewmates shared. When we lined up for the next lesson, he told me that the mornings feel overwhelming because he doesn't know what we'll be doing each day. I encouraged him to ask questions when he feels uncertain rather than standing apart. Building comfort with transitions will help him feel more secure. His willingness to join in the end is progress compared to last week."
+Observation: "Andrei experienced some difficulty during Art and chose to take a break outside, where he was able to express that he was feeling overwhelmed. He shared that he sometimes finds it hard to manage when many things are happening around him and that he worries about making mistakes. Through one-on-one support, Andrei was able to re-engage in the activity and gradually took more ownership of his choices-selecting his own colors and deciding which shapes to focus on in his drawing. His statement, ""Once I finish this drawing, I have three more shapes,"" showed a shift toward planning and a growing sense of self-direction. Andrei is developing emotional awareness and learning to build trust in his own decision-making."
 Student Count: 1
 
 ## Example 11 (Update this)
 
 **Input**
-Observation: "Diego struggled with the regrouping strategy in subtraction at first, as he kept mixing up which column to borrow from. However, after working through two problems with me, he started applying the method correctly on his own. He solved four problems independently but then slammed his pencil down and said he ""hates math and will never get it."" He often gives up quickly when problems feel challenging and needs reassurance to keep trying."
+Observation: "George did a great job tying the ""coada vacii"" knot on his own, showing confidence in his ability. When it came to the sliding knot, he initially became frustrated and upset when he realized he couldn't do it by himself. He walked away and said he didn't know how to complete the knot, and even though we discussed the importance of progress and perseverance, George had a hard time coming back to try again, even with help. This is an important learning moment for George, as he is still developing his ability to manage frustration and persist through challenges."
 Student Count: 1
 
 ## Example 12
