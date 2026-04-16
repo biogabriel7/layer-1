@@ -30,50 +30,25 @@ Dimension                                    Rate   Target    Floor  Result  Det
 Reasoning matches answer                   100.0%      95%      85%  PASS    150/150 signals
 ```
 
-## Pass Rates
-
-```mermaid
-xychart-beta
-    title "Eval Dimension Pass Rates (%)"
-    x-axis ["Evidence", "ObsType", "Recall", "Precision", "TypeAcc", "Reasoning"]
-    y-axis "Pass %" 0 --> 100
-    bar [98, 100, 91.4, 78, 90.6, 100]
-```
-
 ## Signal Mix
 
-```mermaid
-xychart-beta
-    title "Signal Type Distribution"
-    x-axis ["behavioral evidence", "emotional indicator", "context marker", "concern flag"]
-    y-axis "Signals" 0 --> 95
-    bar [83, 16, 23, 28]
-```
+![Signal Type Distribution](charts/signal_mix.svg)
 
-```mermaid
-xychart-beta
-    title "Observation Confidence Distribution"
-    x-axis ["high", "medium", "low"]
-    y-axis "Signals" 0 --> 120
-    bar [108, 26, 16]
-```
+## Observation Confidence
 
-## Density
-
-```mermaid
-xychart-beta
-    title "Signals per Observation"
-    x-axis ["0", "1", "2", "3", "4", "5", "6", "7"]
-    y-axis "Observations" 0 --> 20
-    bar [3, 10, 8, 7, 15, 3, 0, 4]
-```
+![Observation Confidence Distribution](charts/observation_confidence.svg)
 
 ## SEL Competencies
 
-```mermaid
-xychart-beta
-    title "SEL Competency Frequency"
-    x-axis ["self-aware", "self-mgmt", "social-aware", "rel-skills", "resp-decide"]
-    y-axis "Signal mentions" 0 --> 45
-    bar [19, 40, 11, 27, 7]
-```
+![SEL Competency Frequency](charts/sel_competencies.svg)
+
+## Golden vs Predicted
+
+**Golden vs Predicted Signal Counts (golden-annotated subset)**
+
+|  | Golden |  | Predicted |  |
+| :--- | ---: | :--- | ---: | :--- |
+| behavioral evidence | 83 | `████████████████████` | 83 | `████████████████████` |
+| emotional indicator | 13 | `███` | 16 | `████` |
+| context marker | 18 | `████` | 23 | `██████` |
+| concern flag | 14 | `███` | 28 | `███████` |

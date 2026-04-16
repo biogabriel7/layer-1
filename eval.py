@@ -45,6 +45,7 @@ JUDGE_PROMPT_PATH = Path("judge_prompt.md")
 RUBRIC_PATH = Path("prompt.md")
 REASONING_EVAL_DIR = Path("reasoning_eval")
 SUMMARY_PATH = Path("summary.md")
+CHARTS_DIR = Path("charts")
 JUDGE_MODEL = "anthropic/claude-sonnet-4-6"
 
 VALID_TYPES = {
@@ -855,7 +856,7 @@ def run_reasoning_audit(
 
 
 # ---------------------------------------------------------------------------
-# Summary file (Markdown with Mermaid charts)
+# Summary file (Markdown with SVG pies + Unicode bar comparison)
 # ---------------------------------------------------------------------------
 
 
@@ -896,27 +897,107 @@ def _distributions(results: list[ResultFile]) -> dict[str, Any]:
     }
 
 
-def _mermaid_bar(
+def _xml_escape(s: str) -> str:
+    return (
+        s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        .replace('"', "&quot;")
+    )
+
+
+# Mermaid `pie` doesn't render in some Markdown viewers; standalone SVG files
+# work in any viewer that displays linked images (GitHub included).
+PIE_PALETTE = [
+    "#5b8def", "#f08e3b", "#52b788", "#d36bd6", "#e9c46a", "#7a5af8",
+]
+
+
+def _pie_svg(title: str, labels: list[str], values: list[float]) -> str:
+    pairs = [(lbl, v) for lbl, v in zip(labels, values) if v > 0]
+    width, height, cx, cy, r = 540, 320, 160, 175, 120
+    parts: list[str] = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
+        f'font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">',
+        f'<text x="{width // 2}" y="28" text-anchor="middle" '
+        f'font-size="16" font-weight="600">{_xml_escape(title)}</text>',
+    ]
+
+    total = sum(v for _, v in pairs)
+    if total <= 0:
+        parts.append(
+            f'<text x="{width // 2}" y="{height // 2}" text-anchor="middle" '
+            'font-size="14" fill="#888">no data</text></svg>'
+        )
+        return "\n".join(parts)
+
+    angle = -math.pi / 2  # start at 12 o'clock
+    for i, (_, val) in enumerate(pairs):
+        sweep = 2 * math.pi * (val / total)
+        x1 = cx + r * math.cos(angle)
+        y1 = cy + r * math.sin(angle)
+        x2 = cx + r * math.cos(angle + sweep)
+        y2 = cy + r * math.sin(angle + sweep)
+        large = 1 if sweep > math.pi else 0
+        color = PIE_PALETTE[i % len(PIE_PALETTE)]
+        # Single full-circle slice needs a circle, not a degenerate path.
+        if len(pairs) == 1:
+            parts.append(
+                f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{color}" '
+                'stroke="white" stroke-width="2"/>'
+            )
+        else:
+            parts.append(
+                f'<path d="M {cx} {cy} L {x1:.2f} {y1:.2f} '
+                f'A {r} {r} 0 {large} 1 {x2:.2f} {y2:.2f} Z" '
+                f'fill="{color}" stroke="white" stroke-width="2"/>'
+            )
+        angle += sweep
+
+    lx, ly = 320, 80
+    for i, (lbl, val) in enumerate(pairs):
+        color = PIE_PALETTE[i % len(PIE_PALETTE)]
+        pct_str = f"{(val / total) * 100:.1f}%"
+        parts.append(
+            f'<rect x="{lx}" y="{ly + i * 28}" width="14" height="14" fill="{color}"/>'
+            f'<text x="{lx + 22}" y="{ly + i * 28 + 12}" font-size="13" fill="#222">'
+            f'{_xml_escape(lbl)} — {val:g} ({pct_str})</text>'
+        )
+
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+
+def _write_pie(name: str, title: str, labels: list[str], values: list[float]) -> str:
+    """Write a pie chart SVG to charts/ and return a Markdown image reference."""
+    CHARTS_DIR.mkdir(exist_ok=True)
+    path = CHARTS_DIR / f"{name}.svg"
+    path.write_text(_pie_svg(title, labels, values))
+    return f"![{title}]({path.as_posix()})"
+
+
+def _compare_bar_table(
     title: str,
     labels: list[str],
-    values: list[float],
-    y_label: str,
-    y_max: float | None = None,
+    series_a_label: str,
+    series_a: list[float],
+    series_b_label: str,
+    series_b: list[float],
+    bar_width: int = 20,
 ) -> str:
-    if y_max is None:
-        peak = max(values) if values else 1.0
-        y_max = math.ceil(peak * 1.1 / 5) * 5 if peak > 0 else 10
-    labels_str = "[" + ", ".join(f'"{lbl}"' for lbl in labels) + "]"
-    values_str = "[" + ", ".join(f"{v:g}" for v in (round(v, 1) for v in values)) + "]"
-    return (
-        "```mermaid\n"
-        "xychart-beta\n"
-        f'    title "{title}"\n'
-        f"    x-axis {labels_str}\n"
-        f'    y-axis "{y_label}" 0 --> {y_max}\n'
-        f"    bar {values_str}\n"
-        "```"
-    )
+    """Two-series bar table; both series share a peak so bars are comparable."""
+    peak = max([*series_a, *series_b], default=1.0)
+    if peak <= 0:
+        peak = 1.0
+    lines = [
+        f"**{title}**",
+        "",
+        f"|  | {series_a_label} |  | {series_b_label} |  |",
+        "| :--- | ---: | :--- | ---: | :--- |",
+    ]
+    for lbl, a, b in zip(labels, series_a, series_b):
+        a_bar = "\u2588" * (round(a / peak * bar_width) if a > 0 else 0)
+        b_bar = "\u2588" * (round(b / peak * bar_width) if b > 0 else 0)
+        lines.append(f"| {lbl} | {a:g} | `{a_bar}` | {b:g} | `{b_bar}` |")
+    return "\n".join(lines)
 
 
 def _summary_report_block(m: Metrics, reasoning: ReasoningMetrics | None) -> str:
@@ -955,61 +1036,57 @@ def write_summary(
     m: Metrics,
     reasoning: ReasoningMetrics | None,
     results: list[ResultFile],
+    golden_by_key: dict[str, GoldenExample],
     scope_desc: str,
 ) -> None:
-    """Render summary.md with eval metrics + Mermaid charts."""
+    """Render summary.md with eval metrics + pie charts + golden comparison."""
     dist = _distributions(results)
 
-    # Chart 1: pass rates across all eval dimensions
-    pass_labels = ["Evidence", "ObsType", "Recall", "Precision", "TypeAcc"]
-    pass_values: list[float] = [
-        pct(m.eg_passed, m.eg_total) * 100,
-        pct(m.ot_passed, m.ot_total) * 100,
-        pct(m.golden_signals_matched, m.golden_signals_total) * 100,
-        pct(m.predicted_signals_matched, m.predicted_signals_total) * 100,
-        pct(m.type_matches, m.type_total) * 100,
-    ]
-    if reasoning is not None:
-        pass_labels.append("Reasoning")
-        pass_values.append(pct(reasoning.signals_passed, reasoning.signals_total) * 100)
-    pass_chart = _mermaid_bar(
-        "Eval Dimension Pass Rates (%)",
-        pass_labels, pass_values, "Pass %", y_max=100,
-    )
-
-    # Chart 2: signal type distribution
+    # Signal type distribution (pie)
     type_order = ["behavioral_evidence", "emotional_indicator",
                   "context_marker", "concern_flag"]
     type_labels = [t.replace("_", " ") for t in type_order]
     type_values = [float(dist["type_counts"].get(t, 0)) for t in type_order]
-    type_chart = _mermaid_bar(
-        "Signal Type Distribution", type_labels, type_values, "Signals",
+    type_chart = _write_pie(
+        "signal_mix", "Signal Type Distribution", type_labels, type_values,
     )
 
-    # Chart 3: confidence distribution
+    # Confidence distribution (pie)
     conf_order = ["high", "medium", "low"]
     conf_values = [float(dist["confidence_counts"].get(c, 0)) for c in conf_order]
-    conf_chart = _mermaid_bar(
-        "Observation Confidence Distribution", conf_order, conf_values, "Signals",
+    conf_chart = _write_pie(
+        "observation_confidence", "Observation Confidence Distribution",
+        conf_order, conf_values,
     )
 
-    # Chart 4: signals-per-observation histogram
-    spo: dict[int, int] = dist["signals_per_obs"]
-    max_n = max(spo.keys()) if spo else 0
-    spo_labels = [str(i) for i in range(max_n + 1)]
-    spo_values = [float(spo.get(i, 0)) for i in range(max_n + 1)]
-    spo_chart = _mermaid_bar(
-        "Signals per Observation", spo_labels, spo_values, "Observations",
-    )
-
-    # Chart 5: SEL competency frequency
+    # SEL competency frequency (pie)
     sel_order = ["self_awareness", "self_management", "social_awareness",
                  "relationship_skills", "responsible_decision_making"]
     sel_labels = ["self-aware", "self-mgmt", "social-aware",
                   "rel-skills", "resp-decide"]
     sel_values = [float(dist["sel_counts"].get(s, 0)) for s in sel_order]
-    sel_chart = _mermaid_bar(
-        "SEL Competency Frequency", sel_labels, sel_values, "Signal mentions",
+    sel_chart = _write_pie(
+        "sel_competencies", "SEL Competency Frequency", sel_labels, sel_values,
+    )
+
+    # Golden vs Predicted: per-type counts over the golden-matched subset.
+    golden_type_counts: dict[str, int] = {}
+    predicted_type_counts: dict[str, int] = {}
+    for r in results:
+        gold = golden_by_key.get(r.cache_key)
+        if gold is None:
+            continue
+        for sig in gold.signals:
+            golden_type_counts[sig.type] = golden_type_counts.get(sig.type, 0) + 1
+        for sig in r.signals:
+            predicted_type_counts[sig.type] = predicted_type_counts.get(sig.type, 0) + 1
+    golden_values = [float(golden_type_counts.get(t, 0)) for t in type_order]
+    predicted_values = [float(predicted_type_counts.get(t, 0)) for t in type_order]
+    compare_chart = _compare_bar_table(
+        "Golden vs Predicted Signal Counts (golden-annotated subset)",
+        type_labels,
+        "Golden", golden_values,
+        "Predicted", predicted_values,
     )
 
     obs_ind = dist["obs_type_counts"].get("individual", 0)
@@ -1033,23 +1110,21 @@ _Generated {timestamp} — scope: {scope_desc}_
 {_summary_report_block(m, reasoning)}
 ```
 
-## Pass Rates
-
-{pass_chart}
-
 ## Signal Mix
 
 {type_chart}
 
+## Observation Confidence
+
 {conf_chart}
-
-## Density
-
-{spo_chart}
 
 ## SEL Competencies
 
 {sel_chart}
+
+## Golden vs Predicted
+
+{compare_chart}
 """
     SUMMARY_PATH.write_text(body)
 
@@ -1148,7 +1223,7 @@ def main() -> None:
     )
     if args.audit_reasoning and not args.dry_run:
         scope_desc += " (with reasoning audit)"
-    write_summary(m, reasoning_metrics, results, scope_desc)
+    write_summary(m, reasoning_metrics, results, golden_by_key, scope_desc)
     print(f"\nWrote {SUMMARY_PATH}")
 
 
