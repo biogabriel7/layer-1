@@ -25,14 +25,23 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any, Iterable
+
+from dotenv import load_dotenv
+from openai import OpenAI
 
 RESULTS_DIR = Path("results")
 CSV_PATH = Path("sample-obs.csv")
 GOLDEN_PATH = Path("golden.md")
+JUDGE_PROMPT_PATH = Path("judge_prompt.md")
+REASONING_EVAL_DIR = Path("reasoning_eval")
+JUDGE_MODEL = "anthropic/claude-sonnet-4-6"
 
 VALID_TYPES = {
     "behavioral_evidence",
@@ -49,6 +58,17 @@ TARGETS = {
     "no_hallucinated_signals": (1.00, 0.95),
     "type_accuracy": (0.95, 0.85),
     "observation_type": (1.00, 0.98),
+}
+
+# Targets for the LLM-judge reasoning audit (--audit-reasoning).
+REASONING_TARGETS = {
+    "reasoning_supports_type":         (0.95, 0.85),
+    "reasoning_supports_competencies": (0.95, 0.85),
+    "reasoning_supports_confidence":   (0.95, 0.85),
+    "reasoning_complete":              (0.95, 0.85),
+    "no_missing_signals":              (1.00, 0.95),
+    "no_hallucinated_signals":         (1.00, 0.95),
+    "type_agreement":                  (0.95, 0.85),
 }
 
 
@@ -99,6 +119,50 @@ class Metrics:
     predicted_signals_matched: int = 0  # → precision
     type_matches: int = 0
     type_total: int = 0
+
+
+# Reasoning-audit data models (used only when --audit-reasoning is set).
+
+
+@dataclass
+class SignalJudgement:
+    signal_index: int
+    evidence: str
+    supports_type: tuple[bool, str]          # (passed, note)
+    supports_competencies: tuple[bool, str]
+    supports_confidence: tuple[bool, str]
+    complete: tuple[bool, str]
+
+
+@dataclass
+class ObservationJudgement:
+    cache_key: str
+    per_signal: list[SignalJudgement]
+    missing_signals: list[tuple[str, str]]                       # (evidence, note)
+    hallucinated_signals: list[tuple[int, str]]                  # (signal_index, note)
+    type_disagreements: list[tuple[int, str, str, str]]          # (idx, predicted, golden, note)
+    matched_pair_count: int                                      # denominator for type_agreement
+
+
+@dataclass
+class ReasoningMetrics:
+    supports_type_total: int = 0
+    supports_type_passed: int = 0
+    supports_comp_total: int = 0
+    supports_comp_passed: int = 0
+    supports_conf_total: int = 0
+    supports_conf_passed: int = 0
+    complete_total: int = 0
+    complete_passed: int = 0
+
+    obs_total: int = 0
+    no_missing_passed: int = 0
+    no_hallucinated_passed: int = 0
+    type_pair_total: int = 0
+    type_pair_passed: int = 0
+
+    # (cache_key, "[check_label] evidence snippet", judge note)
+    failures: list[tuple[str, str, str]] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -416,6 +480,320 @@ def report(m: Metrics, show_failures: bool) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Reasoning audit (LLM-judge, opt-in via --audit-reasoning)
+# ---------------------------------------------------------------------------
+
+
+def load_judge_prompt() -> str:
+    if not JUDGE_PROMPT_PATH.exists():
+        print(f"ERROR: {JUDGE_PROMPT_PATH} not found", file=sys.stderr)
+        sys.exit(1)
+    return JUDGE_PROMPT_PATH.read_text()
+
+
+def build_judge_user_message(
+    result: ResultFile,
+    raw_signals: list[dict[str, Any]],
+    golden: GoldenExample,
+) -> str:
+    """Serialize the judge input. raw_signals comes from results/<key>.json so
+    that reasoning, sel_competencies, and observation_confidence are preserved
+    (the trimmed ResultFile.signals only carries evidence + type)."""
+    payload = {
+        "observation": result.observation,
+        "student_count": result.student_count,
+        "predicted_signals": [
+            {
+                "signal_index": i,
+                "evidence": s.get("evidence", ""),
+                "type": s.get("type", ""),
+                "sel_competencies": s.get("sel_competencies", []),
+                "observation_confidence": s.get("observation_confidence", ""),
+                "reasoning": s.get("reasoning", ""),
+            }
+            for i, s in enumerate(raw_signals)
+        ],
+        "golden_signals": [
+            {"evidence": s.evidence, "type": s.type}
+            for s in golden.signals
+        ],
+    }
+    return json.dumps(payload, ensure_ascii=False, indent=2)
+
+
+def reasoning_cache_key(judge_prompt: str, user_msg: str) -> str:
+    """sha256 over (judge prompt + user message). The user message embeds the
+    full result JSON and the golden annotation, so any drift in any of those
+    three inputs busts the cache automatically."""
+    raw = judge_prompt + "\n---\n" + user_msg
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def call_judge_api(client: OpenAI, system_prompt: str, user_msg: str) -> dict[str, Any]:
+    response = client.chat.completions.create(
+        model=JUDGE_MODEL,
+        temperature=0.0,
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_msg},
+        ],
+    )
+    content = response.choices[0].message.content
+    assert content is not None
+    text = content.strip()
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1]
+        text = text.rsplit("```", 1)[0]
+    parsed: dict[str, Any] = json.loads(text)
+    return parsed
+
+
+def _check(d: Any) -> tuple[bool, str]:
+    if not isinstance(d, dict):
+        return (False, "judge returned malformed entry")
+    return (bool(d.get("passed", False)), str(d.get("note", "")))
+
+
+def parse_judge_response(
+    raw: dict[str, Any], result_cache_key: str, predicted_count: int
+) -> ObservationJudgement:
+    per_signal: list[SignalJudgement] = []
+    for entry in raw.get("per_signal", []):
+        if not isinstance(entry, dict):
+            continue
+        per_signal.append(
+            SignalJudgement(
+                signal_index=int(entry.get("signal_index", -1)),
+                evidence=str(entry.get("evidence", "")),
+                supports_type=_check(entry.get("reasoning_supports_type")),
+                supports_competencies=_check(entry.get("reasoning_supports_competencies")),
+                supports_confidence=_check(entry.get("reasoning_supports_confidence")),
+                complete=_check(entry.get("reasoning_complete")),
+            )
+        )
+
+    missing: list[tuple[str, str]] = [
+        (str(e.get("evidence", "")), str(e.get("note", "")))
+        for e in raw.get("missing_signals", [])
+        if isinstance(e, dict)
+    ]
+    hallucinated: list[tuple[int, str]] = [
+        (int(e.get("signal_index", -1)), str(e.get("note", "")))
+        for e in raw.get("hallucinated_signals", [])
+        if isinstance(e, dict)
+    ]
+    type_disagreements: list[tuple[int, str, str, str]] = [
+        (
+            int(e.get("signal_index", -1)),
+            str(e.get("predicted", "")),
+            str(e.get("golden", "")),
+            str(e.get("note", "")),
+        )
+        for e in raw.get("type_disagreements", [])
+        if isinstance(e, dict)
+    ]
+
+    matched_pair_count = max(0, predicted_count - len(hallucinated))
+
+    return ObservationJudgement(
+        cache_key=result_cache_key,
+        per_signal=per_signal,
+        missing_signals=missing,
+        hallucinated_signals=hallucinated,
+        type_disagreements=type_disagreements,
+        matched_pair_count=matched_pair_count,
+    )
+
+
+def audit_one(
+    result: ResultFile,
+    golden: GoldenExample,
+    judge_prompt: str,
+    client: OpenAI | None,
+    *,
+    force: bool,
+    dry_run: bool,
+) -> ObservationJudgement | None:
+    """Cache-aware judge call. Returns None in dry-run."""
+    raw_data = json.loads((RESULTS_DIR / f"{result.cache_key}.json").read_text())
+    raw_signals_obj = raw_data.get("signals", [])
+    raw_signals: list[dict[str, Any]] = [s for s in raw_signals_obj if isinstance(s, dict)]
+    user_msg = build_judge_user_message(result, raw_signals, golden)
+    rc_key = reasoning_cache_key(judge_prompt, user_msg)
+    cache_path = REASONING_EVAL_DIR / f"{rc_key}.json"
+
+    if dry_run:
+        first_line = judge_prompt.split("\n", 1)[0]
+        print(f"[dry-run] {result.cache_key[:12]}  cache={rc_key[:12]}")
+        print(f"  system: {first_line[:120]}")
+        print(f"  user:   {user_msg[:200].replace(chr(10), ' ')}...")
+        return None
+
+    if not force and cache_path.exists():
+        raw_judge = json.loads(cache_path.read_text())
+    else:
+        assert client is not None
+        raw_judge = call_judge_api(client, judge_prompt, user_msg)
+        REASONING_EVAL_DIR.mkdir(exist_ok=True)
+        cache_path.write_text(json.dumps(raw_judge, indent=2, ensure_ascii=False))
+
+    return parse_judge_response(raw_judge, result.cache_key, len(raw_signals))
+
+
+def aggregate_reasoning(judgements: Iterable[ObservationJudgement]) -> ReasoningMetrics:
+    m = ReasoningMetrics()
+    for j in judgements:
+        m.obs_total += 1
+        if not j.missing_signals:
+            m.no_missing_passed += 1
+        if not j.hallucinated_signals:
+            m.no_hallucinated_passed += 1
+        m.type_pair_total += j.matched_pair_count
+        m.type_pair_passed += max(0, j.matched_pair_count - len(j.type_disagreements))
+
+        for sj in j.per_signal:
+            for label, (passed, note) in (
+                ("supports_type", sj.supports_type),
+                ("supports_competencies", sj.supports_competencies),
+                ("supports_confidence", sj.supports_confidence),
+                ("complete", sj.complete),
+            ):
+                if label == "supports_type":
+                    m.supports_type_total += 1
+                    if passed:
+                        m.supports_type_passed += 1
+                elif label == "supports_competencies":
+                    m.supports_comp_total += 1
+                    if passed:
+                        m.supports_comp_passed += 1
+                elif label == "supports_confidence":
+                    m.supports_conf_total += 1
+                    if passed:
+                        m.supports_conf_passed += 1
+                else:
+                    m.complete_total += 1
+                    if passed:
+                        m.complete_passed += 1
+
+                if not passed:
+                    snippet = sj.evidence if len(sj.evidence) <= 100 else sj.evidence[:97] + "..."
+                    m.failures.append((j.cache_key, f"[{label}] {snippet}", note))
+    return m
+
+
+def report_reasoning(m: ReasoningMetrics, show_failures: bool) -> None:
+    rows: list[tuple[str, float, tuple[float, float], str]] = [
+        ("Reasoning supports type",
+         pct(m.supports_type_passed, m.supports_type_total),
+         REASONING_TARGETS["reasoning_supports_type"],
+         f"{m.supports_type_passed}/{m.supports_type_total} signals"),
+        ("Reasoning supports competencies",
+         pct(m.supports_comp_passed, m.supports_comp_total),
+         REASONING_TARGETS["reasoning_supports_competencies"],
+         f"{m.supports_comp_passed}/{m.supports_comp_total} signals"),
+        ("Reasoning supports confidence",
+         pct(m.supports_conf_passed, m.supports_conf_total),
+         REASONING_TARGETS["reasoning_supports_confidence"],
+         f"{m.supports_conf_passed}/{m.supports_conf_total} signals"),
+        ("Reasoning complete (Rule 10)",
+         pct(m.complete_passed, m.complete_total),
+         REASONING_TARGETS["reasoning_complete"],
+         f"{m.complete_passed}/{m.complete_total} signals"),
+        ("No missing signals vs. golden",
+         pct(m.no_missing_passed, m.obs_total),
+         REASONING_TARGETS["no_missing_signals"],
+         f"{m.no_missing_passed}/{m.obs_total} observations"),
+        ("No hallucinated signals vs. golden",
+         pct(m.no_hallucinated_passed, m.obs_total),
+         REASONING_TARGETS["no_hallucinated_signals"],
+         f"{m.no_hallucinated_passed}/{m.obs_total} observations"),
+        ("Type agreement vs. golden",
+         pct(m.type_pair_passed, m.type_pair_total),
+         REASONING_TARGETS["type_agreement"],
+         f"{m.type_pair_passed}/{m.type_pair_total} matched pairs"),
+    ]
+
+    print()
+    print(f"Reasoning Audit (N={m.obs_total} golden-annotated observations)")
+    print(f"{'Dimension':<40} {'Rate':>8} {'Target':>8} {'Floor':>8}  Result  Detail")
+    print("-" * 110)
+    for name, rate, (target, floor), detail in rows:
+        v = verdict(rate, target, floor)
+        print(
+            f"{name:<40} {rate*100:>7.1f}% {target*100:>7.0f}% {floor*100:>7.0f}%"
+            f"  {v:<6}  {detail}"
+        )
+
+    if show_failures and m.failures:
+        print("\nFlagged signals (first 20):")
+        for key, label_ev, note in m.failures[:20]:
+            note_snip = note if len(note) <= 80 else note[:77] + "..."
+            print(f"  {key[:12]}  {label_ev!r}  → {note_snip}")
+        if len(m.failures) > 20:
+            print(f"  ...and {len(m.failures) - 20} more")
+
+
+def run_reasoning_audit(
+    results: list[ResultFile],
+    golden_by_key: dict[str, GoldenExample],
+    args: argparse.Namespace,
+) -> None:
+    judge_prompt = load_judge_prompt()
+    audit_candidates: list[tuple[ResultFile, GoldenExample]] = [
+        (r, golden_by_key[r.cache_key])
+        for r in results
+        if r.cache_key in golden_by_key
+    ]
+    if args.limit is not None:
+        audit_candidates = audit_candidates[: args.limit]
+
+    if not audit_candidates:
+        print("\nNo golden-matched results to audit.", file=sys.stderr)
+        return
+
+    if args.dry_run:
+        for result, golden in audit_candidates:
+            audit_one(
+                result, golden, judge_prompt,
+                client=None, force=args.force, dry_run=True,
+            )
+        return
+
+    load_dotenv(".env.local")
+    api_key = os.environ.get("OPENROUTER_API_KEY", "")
+    if not api_key:
+        print("ERROR: OPENROUTER_API_KEY not set", file=sys.stderr)
+        sys.exit(1)
+    client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
+
+    def _do_audit(r: ResultFile, g: GoldenExample) -> ObservationJudgement | None:
+        return audit_one(
+            r, g, judge_prompt, client, force=args.force, dry_run=False,
+        )
+
+    judgements: list[ObservationJudgement] = []
+    errors = 0
+    with ThreadPoolExecutor(max_workers=args.workers) as pool:
+        futures = {pool.submit(_do_audit, r, g): r for r, g in audit_candidates}
+        for future in as_completed(futures):
+            try:
+                j = future.result()
+                if j is not None:
+                    judgements.append(j)
+            except Exception as e:
+                r = futures[future]
+                print(f"ERROR auditing {r.cache_key[:12]}: {e}", file=sys.stderr)
+                errors += 1
+
+    if errors:
+        print(f"\n{errors} audit errors", file=sys.stderr)
+
+    metrics = aggregate_reasoning(judgements)
+    report_reasoning(metrics, show_failures=args.show_failures)
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -425,7 +803,34 @@ def main() -> None:
     parser.add_argument(
         "--show-failures",
         action="store_true",
-        help="Print evidence grounding failures for debugging",
+        help="Print evidence-grounding (and reasoning-audit) failures for debugging",
+    )
+    parser.add_argument(
+        "--audit-reasoning",
+        action="store_true",
+        help="Run the LLM judge over per-signal `reasoning` and print a second table",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Bust the reasoning-audit cache (only with --audit-reasoning)",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Audit only the first N golden-matched observations (only with --audit-reasoning)",
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=4,
+        help="Parallel judge workers (only with --audit-reasoning)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print the judge prompt without calling the API (only with --audit-reasoning)",
     )
     args = parser.parse_args()
 
@@ -448,6 +853,9 @@ def main() -> None:
     print(f"Scored {len(results)} results "
           f"({len(golden_by_key)} golden annotations available)")
     report(m, show_failures=args.show_failures)
+
+    if args.audit_reasoning:
+        run_reasoning_audit(results, golden_by_key, args)
 
 
 if __name__ == "__main__":

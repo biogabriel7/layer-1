@@ -14,10 +14,12 @@ Reads teacher observations from `sample-obs.csv`, sends each one to an LLM via O
 ## Build & Run
 
 ```bash
-uv sync                        # installs dependencies into the project's virtual environment
-uv run extract.py --limit 5   # runs extract.py in the venv, stops after 5 rows (for testing)
-uv run extract.py              # full run (3,119 observations)
-uv run eval.py                 # score results against golden.md dataset
+uv sync                                          # installs dependencies into the project's virtual environment
+uv run extract.py --limit 5                      # runs extract.py in the venv, stops after 5 rows (for testing)
+uv run extract.py                                # full run (3,119 observations)
+uv run eval.py                                   # score results against golden.md dataset (no API calls)
+uv run eval.py --audit-reasoning --limit 5       # smoke-test the LLM reasoning judge
+uv run eval.py --audit-reasoning                 # full reasoning audit (N=50 golden-annotated)
 ```
 
 ## File Structure
@@ -67,8 +69,8 @@ Evidence Grounding and Observation Type are programmatic — run on all 3,119 ob
 ## Project-Specific Rules
 
 - **TEMPORARY: Always use `--limit 10` when running `extract.py` — never run the full dataset**
-- `eval.py` never calls the API — reads from `results/` only
-- `results/` and `.env` are gitignored
+- `eval.py` reads from `results/` only by default; opt in to `--audit-reasoning` to call the judge API (sonnet-4-6, cached under `reasoning_eval/`)
+- `results/`, `reasoning_eval/`, and `.env` are gitignored
 
 ## Environment
 
