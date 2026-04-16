@@ -801,20 +801,16 @@ def _format_divergent_examples(
             if d.likely_cause:
                 lines.append(f"  - _why:_ {d.likely_cause}")
         lines.append("")
-
         # Load full predicted output (sel_competencies, observation_confidence,
         # reasoning) from the cached result JSON. ResultFile.signals only
         # carries evidence + type, which isn't enough for a direct comparison.
-        try:
-            raw_pred = json.loads((RESULTS_DIR / f"{key}.json").read_text())
-            predicted_full = raw_pred.get("signals", [])
-        except Exception:
-            predicted_full = []
+        raw_predicted = json.loads((RESULTS_DIR / f"{key}.json").read_text())
+        predicted_signals = raw_predicted.get("signals", [])
 
-        lines.append(f"**Predicted output ({len(predicted_full)} signals):**")
+        lines.append(f"**Predicted output ({len(predicted_signals)} signals):**")
         lines.append("")
         lines.append("```json")
-        lines.append(json.dumps(predicted_full, indent=2, ensure_ascii=False))
+        lines.append(json.dumps(predicted_signals, indent=2, ensure_ascii=False))
         lines.append("```")
         lines.append("")
         lines.append(f"**Golden output ({len(golden.signals)} signals):**")
@@ -1216,9 +1212,10 @@ def write_summary(
         if examples:
             divergent_section = (
                 "\n## Divergent Extractions\n\n"
-                "_Top observations where predicted and golden signals diverge most, "
-                "ranked by the reasoning judge's weighted verdict counts "
-                "(model_wrong=3, ambiguous=2, golden_wrong=1)._\n\n"
+                "_Top 5 observations where predicted and golden signals diverge "
+                "most, ranked by the reasoning judge's weighted verdict counts "
+                "(model_wrong=3, ambiguous=2, golden_wrong=1). Shows the exact "
+                "predicted and golden outputs side by side._\n\n"
                 f"{examples}"
             )
 
