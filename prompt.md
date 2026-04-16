@@ -38,9 +38,14 @@ A signal may map to multiple competencies.
 
 ## Observation Confidence
 
-- `high` — Evidence directly states the behavior/emotion/context.
-- `medium` — Evidence clearly implies but doesn't explicitly state.
-- `low` — Evidence is ambiguous or supports multiple interpretations.
+Confidence reflects how specific and observable the evidence is — concrete actions grounded in what was directly seen or heard score higher than vague generalities or opinions.
+
+- `high` — Evidence directly states the behavior/emotion/context, describing specific actions, words, strategies, or moments grounded in what was directly seen or heard with minimal judgment.
+  - Examples: "Used a number line to compare 3/4 and 2/3, then explained to her partner why 3/4 is larger by finding common denominators" / "Solved 4 of 5 multi-digit multiplication problems correctly, using the partial products strategy without prompting"
+- `medium` — Evidence clearly implies but doesn't explicitly state — some detail about what happened, but still broad, missing key context, or mixing observation with opinion.
+  - Examples: "Worked on fractions and showed understanding" / "Struggled with the reading activity" / "Seems to understand multiplication — did the worksheet correctly"
+- `low` — Evidence is ambiguous or supports multiple interpretations — vague or generic statements, or opinions, labels, and judgments with no observable evidence.
+  - Examples: "Did well today" / "Good work in math" / "Needs improvement" / "Is very smart" / "Isn't trying hard enough" / "Has a great attitude"
 
 ## Rules
 
