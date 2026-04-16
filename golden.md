@@ -17,7 +17,7 @@ Student Count: 1
 **Output**
 "signals": [
     {
-      "evidence": ""Good participation today.",
+      "evidence": "Good participation today.",
       "type": "behavioral_evidence",
       "sel_competencies": [],
       "observation_confidence": "low"
@@ -60,7 +60,7 @@ Student Count: 1
     {
       "evidence": "Refused to participate in any group activities again today.",
       "type": "concern_flag",
-      "sel_competencies": ["self_management", "social_awareness", "..."],
+      "sel_competencies": ["self_management", "social_awareness"],
       "observation_confidence": "high"
     }
   ]
@@ -163,43 +163,43 @@ Student Count: 1
       "evidence": "chose to take a break outside",
       "type": "behavioral_evidence",
       "sel_competencies": ["self_management"],
-      "confidence": "high"
+      "observation_confidence": "high"
     },
     {
       "evidence": "where he was able to express that he was feeling overwhelmed",
       "type": "emotional_indicator",
       "sel_competencies": ["self_awareness", "self_management"],
-      "confidence": "high"
+      "observation_confidence": "high"
     },
     {
       "evidence": "He shared that he sometimes finds it hard to manage when many things are happening around him and that he worries about making mistakes",
-      "type": "emotional_indicator ",
+      "type": "emotional_indicator",
       "sel_competencies": ["self_awareness"],
-      "confidence": "high"
+      "observation_confidence": "high"
     },
     {
       "evidence": "Through one-on-one support, Andrei was able to re-engage in the activity",
-      "type": "behavioral_evidence ",
+      "type": "behavioral_evidence",
       "sel_competencies": ["self_management"],
-      "confidence": "high"
+      "observation_confidence": "high"
     },
     {
       "evidence": "selecting his own colors and deciding which shapes to focus on in his drawing",
       "type": "behavioral_evidence",
       "sel_competencies": ["self_management"],
-      "confidence": "high"
+      "observation_confidence": "high"
     },
     {
       "evidence": """Once I finish this drawing, I have three more shapes,""",
       "type": "behavioral_evidence",
       "sel_competencies": ["self_management"],
-      "confidence": "high"
+      "observation_confidence": "high"
     },
     {
       "evidence": "Andrei is developing emotional awareness and learning to build trust in his own decision-making",
       "type": "behavioral_evidence",
       "sel_competencies": ["self_management", "self_awareness"],
-      "confidence": "low"
+      "observation_confidence": "low"
     }
   ]
 
@@ -215,31 +215,31 @@ Student Count: 1
       "evidence": "tying the ""coada vacii"" knot on his own",
       "type": "behavioral_evidence",
       "sel_competencies": ["self_management"],
-      "confidence": "high"
+      "observation_confidence": "high"
     },
     {
       "evidence": "When it came to the sliding knot, he initially became frustrated and upset when he realized he couldn’t do it by himself",
       "type": "emotional_indicator",
       "sel_competencies": [],
-      "confidence": "high"
+      "observation_confidence": "high"
     },
     {
       "evidence": "He walked away and said he didn’t know how to complete the knot",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "confidence": "high"
+      "observation_confidence": "high"
     },
     {
       "evidence": "George had a hard time coming back to try again, even with help",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "confidence": "medium"
+      "observation_confidence": "medium"
     },
     {
       "evidence": "he is still developing his ability to manage frustration and persist through challenges",
       "type": "behavioral_evidence",
       "sel_competencies": [],
-      "confidence": "low"
+      "observation_confidence": "low"
     }
   ]
 
@@ -346,7 +346,7 @@ Student Count: 1
 **Output**
 "signals": [
     {
-      "evidence": ""He wrote a complete paragraph with a topic sentence, three supporting details, and a concluding sentence",
+      "evidence": "He wrote a complete paragraph with a topic sentence, three supporting details, and a concluding sentence",
       "type": "behavioral_evidence",
       "sel_competencies": [],
       "observation_confidence": "high"
@@ -418,7 +418,7 @@ Student Count: 1
       "observation_confidence": "high"
     },
     {
-      "evidence": " Later, he told me he was angry because someone took his spot.",
+      "evidence": "Later, he told me he was angry because someone took his spot.",
       "type": "emotional_indicator",
       "sel_competencies": ["self_awareness"],
       "observation_confidence": "high"
@@ -438,7 +438,7 @@ Student Count: 1
       "type": "concern_flag",
       "sel_competencies": [],
       "observation_confidence": "high"
-    },
+    }
   ]
 
 ## Example 21
@@ -527,7 +527,7 @@ Student Count: 1
       "type": "concern_flag",
       "sel_competencies": [],
       "observation_confidence": "high"
-    },
+    }
   ]
 
 ## Example 25
@@ -691,7 +691,7 @@ Student Count: 12
     {
       "evidence": "They remained fully present, enthusiastic, and eager to delve deeper into their mathematical discoveries.",
       "type": "emotional_indicator",
-      "sel_competencies": ["self_management", "social_awareness", "..."],
+      "sel_competencies": ["self_management", "social_awareness"],
       "observation_confidence": "low"
     }
   ]
@@ -745,7 +745,7 @@ Student Count: 1
       "observation_confidence": "high"
     },
     {
-      "evidence": " when it was time to clean up, she refused to help and left her supplies on the table",
+      "evidence": "when it was time to clean up, she refused to help and left her supplies on the table",
       "type": "concern_flag",
       "sel_competencies": [],
       "observation_confidence": "high"
@@ -793,7 +793,7 @@ Student Count: 1
     {
       "evidence": "By the end of the session, he acknowledged that he should have been more open to others' suggestions",
       "type": "behavioral_evidence",
-      "sel_competencies": ["self_awareness","socail_awareness", "responsible_decision_making"],
+      "sel_competencies": ["self_awareness", "social_awareness", "responsible_decision_making"],
       "observation_confidence": "high"
     }
   ]
@@ -808,7 +808,7 @@ Student Count: 1
 "signals": [
     {
       "evidence": "scoring 100% on the fractions unit test",
-      "type": "behavioral_evidence ",
+      "type": "behavioral_evidence",
       "sel_competencies": [],
       "observation_confidence": "high"
     },
@@ -968,7 +968,7 @@ Student Count: 1
     },
     {
       "evidence": "She spent extra time planning her story structure before writing",
-      "type": "behavioral_evidence ",
+      "type": "behavioral_evidence",
       "sel_competencies": ["self_management"],
       "observation_confidence": "high"
     },
@@ -1067,7 +1067,7 @@ Student Count: 1
     {
       "evidence": "When a classmate spilled flour, he immediately grabbed a cloth and helped clean it up without being asked",
       "type": "behavioral_evidence",
-      "sel_competencies": ["social_awareness", ""self_management""],
+      "sel_competencies": ["social_awareness", "self_management"],
       "observation_confidence": "high"
     },
     {
@@ -1101,13 +1101,13 @@ Student Count: 1
     {
       "evidence": "She answered questions from her classmates thoughtfully",
       "type": "behavioral_evidence",
-      "sel_competencies": ["relatioship_skills"],
+      "sel_competencies": ["relationship_skills"],
       "observation_confidence": "medium"
     },
     {
       "evidence": "She recommended the book to others and explained why she connected with the main character",
       "type": "behavioral_evidence",
-      "sel_competencies": ["relatioship_skills", "self_awareness"],
+      "sel_competencies": ["relationship_skills", "self_awareness"],
       "observation_confidence": "high"
     },
     {
@@ -1115,7 +1115,7 @@ Student Count: 1
       "type": "behavioral_evidence",
       "sel_competencies": ["self_management"],
       "observation_confidence": "high"
-    },
+    }
   ]
 
 ## Example 43
@@ -1127,7 +1127,7 @@ Student Count: 1
 **Output**
 "signals": [
     {
-      "evidence": "He did okay today",
+      "evidence": "He did okay today.",
       "type": "behavioral_evidence",
       "sel_competencies": [],
       "observation_confidence": "low"
@@ -1258,7 +1258,7 @@ Student Count: 1
     {
       "evidence": "he set a personal goal to finish his chapter book by Friday",
       "type": "behavioral_evidence",
-      "sel_competencies": ["self_management",],
+      "sel_competencies": ["self_management"],
       "observation_confidence": "high"
     },
     {
