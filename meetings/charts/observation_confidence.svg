@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 320" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
-<text x="270" y="28" text-anchor="middle" font-size="16" font-weight="600">Observation Confidence Distribution</text>
-<path d="M 160 175 L 160.00 55.00 A 120 120 0 1 1 43.17 202.40 Z" fill="#5b8def" stroke="white" stroke-width="2"/>
-<path d="M 160 175 L 43.17 202.40 A 120 120 0 0 1 89.47 77.92 Z" fill="#f08e3b" stroke="white" stroke-width="2"/>
-<path d="M 160 175 L 89.47 77.92 A 120 120 0 0 1 160.00 55.00 Z" fill="#52b788" stroke="white" stroke-width="2"/>
-<rect x="320" y="80" width="14" height="14" fill="#5b8def"/><text x="342" y="92" font-size="13" fill="#222">high — 107 (71.3%)</text>
-<rect x="320" y="108" width="14" height="14" fill="#f08e3b"/><text x="342" y="120" font-size="13" fill="#222">medium — 28 (18.7%)</text>
-<rect x="320" y="136" width="14" height="14" fill="#52b788"/><text x="342" y="148" font-size="13" fill="#222">low — 15 (10.0%)</text>
-</svg>

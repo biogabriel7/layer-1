@@ -5,6 +5,7 @@ description = ""
 requires-python = ">=3.13"
 dependencies = [
     "openai>=2.30.0",
+    "pydantic>=2.0",
     "python-dotenv>=1.2.2",
 ]
 
@@ -18,7 +19,7 @@ line-length = 100
 select = ["E", "F", "I", "W"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["layer_1"]
+known-first-party = ["pipeline"]
 
 [dependency-groups]
 dev = [

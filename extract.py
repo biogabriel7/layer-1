@@ -1,39 +1,39 @@
-"""Reads sample-obs.csv, sends each observation to an LLM via OpenRouter,
-and extracts structured insight signals to results/."""
+"""Reads a per-school observation JSON, sends each observation to an LLM via
+OpenRouter, and appends structured insight signals to outputs/extractions.jsonl.
+
+Results are appended progressively (one JSON object per line) so large runs
+never buffer the full dataset in memory and a crash mid-run never loses
+already-completed rows. On reload, duplicate observation_ids are deduped
+last-wins, which keeps `--force` re-runs safe without rewriting the file."""
 
 import argparse
-import csv
-import hashlib
 import json
-import os
-import re
 import sys
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from typing import Any
 
-from dotenv import load_dotenv
 from openai import OpenAI
 
-load_dotenv(".env.local")
+from pipeline.llm import call_json, make_client
+from pipeline.models import (
+    EXTRACTIONS_PATH,
+    EXTRACTOR_PROMPT_PATH,
+    OBSERVATIONS_PATH,
+    QUALITY_CHECKS_PATH,
+)
+from pipeline.schema import ExtractionOutput
+from pipeline.text import cache_key
 
-API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-
-RESULTS_DIR = Path("results")
-PROMPT_PATH = Path("prompt.md")
-GOLDEN_PATH = Path("golden.md")
 MODEL = "anthropic/claude-opus-4-6"
+SCHEMA_VERSION = "v2"
 
-
-def cache_key(observation: str, student_count: int) -> str:
-    raw = f"{observation}|{student_count}"
-    return hashlib.sha256(raw.encode()).hexdigest()
+_WRITE_LOCK = threading.Lock()
 
 
 def load_system_prompt() -> str:
-    if not PROMPT_PATH.exists():
-        print("ERROR: prompt.md not found", file=sys.stderr)
-        sys.exit(1)
-    return PROMPT_PATH.read_text()
+    return EXTRACTOR_PROMPT_PATH.read_text()
 
 
 def build_user_message(observation: str, student_count: int) -> str:
@@ -43,7 +43,8 @@ def build_user_message(observation: str, student_count: int) -> str:
 def postprocess(result: dict[str, object], student_count: int) -> dict[str, object]:
     """Enforce deterministic fields regardless of what the model returned."""
     signals = result.get("signals", [])
-    assert isinstance(signals, list)
+    if not isinstance(signals, list):
+        raise TypeError(f"signals must be a list, got {type(signals).__name__}")
     signal_count = len(signals)
 
     result["signal_count"] = signal_count
@@ -60,6 +61,14 @@ def postprocess(result: dict[str, object], student_count: int) -> dict[str, obje
     else:
         result["insight_density"] = "high"
 
+    result["meaningful_content"] = signal_count > 0
+
+    named = result.get("named_students", [])
+    if not isinstance(named, list):
+        named = []
+        result["named_students"] = named
+    result["named_students_count"] = len(named)
+
     return result
 
 
@@ -68,125 +77,197 @@ def call_api(
     system_prompt: str,
     observation: str,
     student_count: int,
-) -> dict[str, object]:
-    user_msg = build_user_message(observation, student_count)
-    response = client.chat.completions.create(
-        model=MODEL,
-        temperature=0.0,
-        response_format={"type": "json_object"},
-        messages=[
-            {
-                "role": "system",
-                "content": system_prompt,
-            },
-            {"role": "user", "content": user_msg},
-        ],
-        extra_body={
-            "transforms": ["anthropic-cache"],
-        },
+) -> dict[str, Any]:
+    return call_json(
+        client, system_prompt, build_user_message(observation, student_count), model=MODEL,
     )
-    content = response.choices[0].message.content
-    assert content is not None
-    # OpenRouter sometimes wraps JSON in markdown code fences
-    text = content.strip()
-    if text.startswith("```"):
-        text = text.split("\n", 1)[1]  # drop opening ```json
-        text = text.rsplit("```", 1)[0]  # drop closing ```
-    return json.loads(text)  # type: ignore[no-any-return]
 
 
 def process_row(
-    client: OpenAI,
+    client: OpenAI | None,
     system_prompt: str,
-    comment_key: str,
+    observation_id: str,
     observation: str,
     student_count: int,
+    source_metadata: dict[str, Any],
     *,
     force: bool,
     dry_run: bool,
+    existing_keys: set[str],
+    output_path: Path,
 ) -> str:
     """Process a single observation row. Returns the cache key."""
-    key = cache_key(observation, student_count)
-    out_path = RESULTS_DIR / f"{key}.json"
+    key = cache_key(observation_id)
 
-    if not force and out_path.exists():
+    if not force and key in existing_keys:
         return key
 
     if dry_run:
-        print(f"[dry-run] {comment_key}")
+        print(f"[dry-run] {observation_id}")
         print(f"  system: {system_prompt[:80]}...")
         print(f"  user:   {build_user_message(observation, student_count)[:120]}...")
         return key
 
+    assert client is not None
     raw = call_api(client, system_prompt, observation, student_count)
 
-    required_signal_keys = {
-        "evidence", "type", "sel_competencies",
-        "observation_confidence", "reasoning",
-    }
-    signals = raw.get("signals", [])
-    if isinstance(signals, list):
-        for i, signal in enumerate(signals):
-            if isinstance(signal, dict):
-                for rk in required_signal_keys:
-                    if rk not in signal:
-                        raise ValueError(f"signal[{i}] missing required key: {rk}")
+    # Fail loudly if the model violates the v2 contract. Pydantic raises with a
+    # detailed message pointing at the offending field.
+    parsed = ExtractionOutput.model_validate(raw)
 
-    signals = raw.get("signals", [])
-    assert isinstance(signals, list)
-    result = postprocess({"signals": signals}, student_count)
+    signals_payload = [s.model_dump() for s in parsed.signals]
+    result = postprocess(
+        {
+            "signals": signals_payload,
+            "named_students": parsed.named_students,
+        },
+        student_count,
+    )
 
     output = {
+        "schema_version": SCHEMA_VERSION,
+        "source": source_metadata,
+        "language": parsed.language,
+        "source_type": "teacher_observation",
         "observation": observation,
         "student_count": student_count,
-        "signals": result["signals"],
         "observation_type": result["observation_type"],
         "signal_count": result["signal_count"],
         "insight_density": result["insight_density"],
+        "meaningful_content": result["meaningful_content"],
+        "named_students": result["named_students"],
+        "named_students_count": result["named_students_count"],
+        "signals": result["signals"],
     }
-    out_path.write_text(json.dumps(output, indent=2, ensure_ascii=False))
+    _append_jsonl(output_path, output)
     return key
 
 
-def load_csv(path: str = "sample-obs.csv") -> list[dict[str, str]]:
-    with open(path, newline="", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
+def _append_jsonl(path: Path, record: dict[str, Any]) -> None:
+    """Append one JSON object as a single line, serialized under a lock so
+    concurrent workers can't interleave bytes."""
+    line = json.dumps(record, ensure_ascii=False)
+    with _WRITE_LOCK, path.open("a", encoding="utf-8") as f:
+        f.write(line + "\n")
 
 
-def load_golden_rows(limit: int | None = None) -> list[dict[str, str]]:
-    """Read just `Observation:` and `Student Count:` from golden.md.
+def sync_quality_checks(rows: list[dict[str, Any]], path: Path) -> int:
+    """Append (observation_id, quality_check) to the sidecar for any row not
+    already present. Rows with a null quality_check are skipped. Returns the
+    number of new lines written."""
+    existing: set[str] = set()
+    if path.exists():
+        with path.open(encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                oid = rec.get("observation_id") if isinstance(rec, dict) else None
+                if isinstance(oid, str) and oid:
+                    existing.add(oid)
 
-    Deliberately does NOT touch the **Output** section, so the answer key
-    cannot enter this script even by accident. Returns rows in the same
-    shape as load_csv() so the rest of the pipeline stays unchanged.
+    new = [
+        r for r in rows
+        if r["observation_id"] not in existing and r.get("quality_check") is not None
+    ]
+    if not new:
+        return 0
+
+    path.parent.mkdir(exist_ok=True)
+    with path.open("a", encoding="utf-8") as f:
+        for r in new:
+            f.write(
+                json.dumps(
+                    {"observation_id": r["observation_id"], "quality_check": r["quality_check"]},
+                    ensure_ascii=False,
+                ) + "\n",
+            )
+    return len(new)
+
+
+def load_existing_keys(path: Path) -> set[str]:
+    """Scan the JSONL file and return the set of cache_keys already present.
+
+    Tolerates a truncated trailing line from a prior crash (skips it).
     """
-    if not GOLDEN_PATH.exists():
-        print(f"ERROR: {GOLDEN_PATH} not found", file=sys.stderr)
+    if not path.exists():
+        return set()
+    keys: set[str] = set()
+    with path.open(encoding="utf-8") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            source = rec.get("source") if isinstance(rec, dict) else None
+            oid = source.get("observation_id") if isinstance(source, dict) else None
+            if isinstance(oid, str) and oid:
+                keys.add(cache_key(oid))
+    return keys
+
+
+def load_observations(path: Path) -> list[dict[str, Any]]:
+    """Read the per-school observation JSON. Returns rows with keys:
+      observation_id:  str (UUID)
+      observation:     str (from 'comment' in the input)
+      student_count:   int (parsed from string)
+      quality_check:   upstream quality score (kept separate from extraction output;
+                       written to the quality-checks sidecar)
+      source_metadata: dict carrying observation_id + upstream pass-through fields
+                       (client_id, created_at)
+
+    Logs a count of records skipped for each reason so silent drops are visible.
+    """
+    data = json.loads(path.read_text())
+    if not isinstance(data, list):
+        print(f"ERROR: {path} is not a JSON array of records", file=sys.stderr)
         sys.exit(1)
 
-    text = GOLDEN_PATH.read_text()
-    parts = re.split(r"^##\s*Example\s+(\d+)\s*$", text, flags=re.MULTILINE)
-    # parts = [preamble, num, body, num, body, ...]
-
-    rows: list[dict[str, str]] = []
-    for i in range(1, len(parts), 2):
-        number = parts[i]
-        body = parts[i + 1]
-        obs_match = re.search(
-            r'Observation:\s*"(.+?)"\s*\n\s*Student Count:',
-            body,
-            re.DOTALL,
-        )
-        sc_match = re.search(r"Student Count:\s*(\d+)", body)
-        if not obs_match or not sc_match:
+    rows: list[dict[str, Any]] = []
+    skipped = {"not_dict": 0, "missing_id": 0, "missing_comment": 0, "bad_student_count": 0}
+    for rec in data:
+        if not isinstance(rec, dict):
+            skipped["not_dict"] += 1
             continue
+        oid = str(rec.get("observation_id", "")).strip()
+        if not oid:
+            skipped["missing_id"] += 1
+            continue
+        comment = str(rec.get("comment", ""))
+        if not comment:
+            skipped["missing_comment"] += 1
+            continue
+        try:
+            sc = int(rec.get("student_count", 1))
+        except (ValueError, TypeError):
+            skipped["bad_student_count"] += 1
+            sc = 1
         rows.append({
-            "comment_key": f"golden#{number}",
-            "observation": obs_match.group(1),
-            "student_count": sc_match.group(1),
+            "observation_id": oid,
+            "observation": comment,
+            "student_count": sc,
+            "quality_check": rec.get("quality_check"),
+            "source_metadata": {
+                "observation_id": oid,
+                "client_id": rec.get("client_id"),
+                "created_at": rec.get("created_at"),
+            },
         })
-        if limit is not None and len(rows) >= limit:
-            break
+
+    total_skipped = sum(skipped.values())
+    if total_skipped:
+        print(
+            f"Loaded {len(rows)} records, skipped {total_skipped} "
+            f"({', '.join(f'{k}={v}' for k, v in skipped.items() if v)})",
+            file=sys.stderr,
+        )
+    else:
+        print(f"Loaded {len(rows)} records from {path.name}", file=sys.stderr)
     return rows
 
 
@@ -197,56 +278,57 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Print prompts without API calls")
     parser.add_argument("--workers", type=int, default=1, help="Parallel workers")
     parser.add_argument(
-        "--golden",
-        type=int,
-        default=None,
-        metavar="N",
-        help="Extract first N golden.md observations instead of sample-obs.csv "
-             "(answer key is never read)",
+        "--input",
+        type=Path,
+        default=OBSERVATIONS_PATH,
+        metavar="PATH",
+        help=f"Observation JSON file (default: {OBSERVATIONS_PATH})",
     )
     args = parser.parse_args()
 
-    RESULTS_DIR.mkdir(exist_ok=True)
+    EXTRACTIONS_PATH.parent.mkdir(exist_ok=True)
+    existing_keys = load_existing_keys(EXTRACTIONS_PATH)
 
     system_prompt = load_system_prompt()
 
-    if args.golden is not None:
-        rows = load_golden_rows(limit=args.golden)
-    else:
-        rows = load_csv()
-        if args.limit is not None:
-            rows = rows[: args.limit]
+    rows = load_observations(args.input)
+    if args.limit is not None:
+        rows = rows[: args.limit]
 
-    client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=API_KEY,
-    )
+    qc_added = sync_quality_checks(rows, QUALITY_CHECKS_PATH)
+    if qc_added:
+        print(f"Wrote {qc_added} quality_check rows to {QUALITY_CHECKS_PATH}", file=sys.stderr)
+
+    client = None if args.dry_run else make_client()
 
     processed = 0
     cached = 0
     errors = 0
 
-    def handle_row(row: dict[str, str]) -> tuple[str, bool, str | None]:
-        comment_key = row["comment_key"]
+    def handle_row(row: dict[str, Any]) -> tuple[str, bool, str | None]:
+        observation_id = row["observation_id"]
         observation = row["observation"]
         student_count = int(row["student_count"])
-        key = cache_key(observation, student_count)
-        out_path = RESULTS_DIR / f"{key}.json"
-        was_cached = not args.force and out_path.exists()
+        source_metadata = row["source_metadata"]
+        key = cache_key(observation_id)
+        was_cached = not args.force and key in existing_keys
 
         try:
             process_row(
                 client,
                 system_prompt,
-                comment_key,
+                observation_id,
                 observation,
                 student_count,
+                source_metadata,
                 force=args.force,
                 dry_run=args.dry_run,
+                existing_keys=existing_keys,
+                output_path=EXTRACTIONS_PATH,
             )
             return key, was_cached, None
         except Exception as e:
-            return key, False, f"{comment_key}: {e}"
+            return key, False, f"{observation_id}: {type(e).__name__}: {e}"
 
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = {pool.submit(handle_row, row): row for row in rows}

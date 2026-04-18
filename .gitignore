@@ -2,6 +2,8 @@
 .env.local
 .venv/
 __pycache__/
+.mypy_cache/
+.ruff_cache/
 .context/
-results/
-reasoning_eval/
+outputs/
+inputs/
