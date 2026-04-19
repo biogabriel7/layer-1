@@ -20,16 +20,30 @@ if [ ! -d "$DATA_HARNESS_PATH" ]; then
 fi
 
 echo "==> Checking environment..."
-if [ ! -f "$PWD/.env.local" ]; then
-    # Resolve the main repo root via git (works in worktrees)
-    MAIN_REPO_ROOT=""
-    if command -v git &>/dev/null; then
-        GIT_COMMON_DIR="$(git rev-parse --git-common-dir 2>/dev/null || true)"
-        if [ -n "$GIT_COMMON_DIR" ]; then
-            MAIN_REPO_ROOT="$(cd "$GIT_COMMON_DIR/.." && pwd)"
-        fi
+# Resolve the main repo root via git (works in worktrees)
+MAIN_REPO_ROOT=""
+if command -v git &>/dev/null; then
+    GIT_COMMON_DIR="$(git rev-parse --git-common-dir 2>/dev/null || true)"
+    if [ -n "$GIT_COMMON_DIR" ]; then
+        MAIN_REPO_ROOT="$(cd "$GIT_COMMON_DIR/.." && pwd)"
     fi
+fi
 
+# Copy .env if missing
+if [ ! -f "$PWD/.env" ]; then
+    if [ -n "$MAIN_REPO_ROOT" ] && [ -f "$MAIN_REPO_ROOT/.env" ]; then
+        cp "$MAIN_REPO_ROOT/.env" "$PWD/.env"
+        echo "    Copied .env from main repo root ($MAIN_REPO_ROOT)"
+    elif [ -f "$CONDUCTOR_ROOT_PATH/.env" ]; then
+        cp "$CONDUCTOR_ROOT_PATH/.env" "$PWD/.env"
+        echo "    Copied .env from CONDUCTOR_ROOT_PATH"
+    else
+        echo "    Warning: .env not found — create with OPENROUTER_API_KEY"
+    fi
+fi
+
+# Copy .env.local if missing
+if [ ! -f "$PWD/.env.local" ]; then
     if [ -n "$MAIN_REPO_ROOT" ] && [ -f "$MAIN_REPO_ROOT/.env.local" ]; then
         cp "$MAIN_REPO_ROOT/.env.local" "$PWD/.env.local"
         echo "    Copied .env.local from main repo root ($MAIN_REPO_ROOT)"
@@ -38,6 +52,19 @@ if [ ! -f "$PWD/.env.local" ]; then
         echo "    Copied .env.local from CONDUCTOR_ROOT_PATH"
     else
         echo "    Warning: .env.local not found — copy from template or create with secrets"
+    fi
+fi
+
+# Symlink inputs/ if missing (avoid duplicating large data files)
+if [ ! -d "$PWD/inputs" ]; then
+    if [ -n "$MAIN_REPO_ROOT" ] && [ -d "$MAIN_REPO_ROOT/inputs" ]; then
+        ln -s "$MAIN_REPO_ROOT/inputs" "$PWD/inputs"
+        echo "    Symlinked inputs/ from main repo root ($MAIN_REPO_ROOT)"
+    elif [ -d "$CONDUCTOR_ROOT_PATH/inputs" ]; then
+        ln -s "$CONDUCTOR_ROOT_PATH/inputs" "$PWD/inputs"
+        echo "    Symlinked inputs/ from CONDUCTOR_ROOT_PATH"
+    else
+        echo "    Warning: inputs/ not found — add observation JSON files manually"
     fi
 fi
 
