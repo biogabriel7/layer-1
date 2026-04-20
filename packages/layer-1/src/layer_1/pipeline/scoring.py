@@ -1,7 +1,7 @@
 """Programmatic scoring of extraction results against deterministic rules."""
 
-from pipeline.models import Metrics, ResultFile
-from pipeline.text import evidence_grounded
+from core.text import evidence_grounded
+from layer_1.pipeline.models import Metrics, ResultFile
 
 
 def expected_observation_type(student_count: int) -> str:

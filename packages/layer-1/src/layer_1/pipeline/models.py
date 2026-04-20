@@ -4,13 +4,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-INPUTS_DIR = Path("inputs")
-OUTPUTS_DIR = Path("outputs")
+# packages/layer-1/src/layer_1/pipeline/models.py → packages/layer-1/
+PACKAGE_ROOT = Path(__file__).resolve().parents[3]
 
-OBSERVATIONS_PATH = INPUTS_DIR / "observations-stfrancis-2026-04-17.json"
+INPUTS_DIR = PACKAGE_ROOT / "inputs"
+OUTPUTS_DIR = PACKAGE_ROOT / "outputs"
 
-EXTRACTOR_PROMPT_PATH = Path("prompts/extractor.md")
-AUDIT_PROMPT_PATH = Path("prompts/judge_reference_free.md")
+OBSERVATIONS_PATH = INPUTS_DIR / "observations-stfrancis-2025-04-19.json"
+
+EXTRACTOR_PROMPT_PATH = PACKAGE_ROOT / "prompts" / "extractor.md"
+AUDIT_PROMPT_PATH = PACKAGE_ROOT / "prompts" / "judge_reference_free.md"
 
 EXTRACTIONS_PATH = OUTPUTS_DIR / "extractions.jsonl"
 QUALITY_CHECKS_PATH = OUTPUTS_DIR / "quality-checks.jsonl"

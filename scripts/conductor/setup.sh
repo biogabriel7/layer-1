@@ -5,6 +5,8 @@
 #
 set -euo pipefail
 
+# data-harness rule set name. Keeping "quality-observations" until data-harness
+# ships a rule set keyed on the new repo name "extraction-pipeline".
 PROJECT_NAME="quality-observations"
 
 if [ -z "${DATA_HARNESS_PATH:-}" ]; then
@@ -55,22 +57,31 @@ if [ ! -f "$PWD/.env.local" ]; then
     fi
 fi
 
-# Symlink inputs/ if missing (avoid duplicating large data files)
-if [ ! -d "$PWD/inputs" ]; then
-    if [ -n "$MAIN_REPO_ROOT" ] && [ -d "$MAIN_REPO_ROOT/inputs" ]; then
-        ln -s "$MAIN_REPO_ROOT/inputs" "$PWD/inputs"
-        echo "    Symlinked inputs/ from main repo root ($MAIN_REPO_ROOT)"
+# Symlink packages/layer-1/inputs if missing (avoid duplicating large data files)
+INPUTS_DST="$PWD/packages/layer-1/inputs"
+INPUTS_PARENT="$(dirname "$INPUTS_DST")"
+if [ ! -e "$INPUTS_DST" ]; then
+    mkdir -p "$INPUTS_PARENT"
+    if [ -n "$MAIN_REPO_ROOT" ] && [ -d "$MAIN_REPO_ROOT/packages/layer-1/inputs" ]; then
+        ln -s "$MAIN_REPO_ROOT/packages/layer-1/inputs" "$INPUTS_DST"
+        echo "    Symlinked packages/layer-1/inputs from main repo root ($MAIN_REPO_ROOT)"
+    elif [ -n "$MAIN_REPO_ROOT" ] && [ -d "$MAIN_REPO_ROOT/inputs" ]; then
+        ln -s "$MAIN_REPO_ROOT/inputs" "$INPUTS_DST"
+        echo "    Symlinked packages/layer-1/inputs from legacy main repo inputs/"
+    elif [ -d "$CONDUCTOR_ROOT_PATH/packages/layer-1/inputs" ]; then
+        ln -s "$CONDUCTOR_ROOT_PATH/packages/layer-1/inputs" "$INPUTS_DST"
+        echo "    Symlinked packages/layer-1/inputs from CONDUCTOR_ROOT_PATH"
     elif [ -d "$CONDUCTOR_ROOT_PATH/inputs" ]; then
-        ln -s "$CONDUCTOR_ROOT_PATH/inputs" "$PWD/inputs"
-        echo "    Symlinked inputs/ from CONDUCTOR_ROOT_PATH"
+        ln -s "$CONDUCTOR_ROOT_PATH/inputs" "$INPUTS_DST"
+        echo "    Symlinked packages/layer-1/inputs from legacy CONDUCTOR_ROOT_PATH inputs/"
     else
-        echo "    Warning: inputs/ not found — add observation JSON files manually"
+        echo "    Warning: inputs not found — add observation JSON files to packages/layer-1/inputs manually"
     fi
 fi
 
 if [ -f "$PWD/pyproject.toml" ]; then
     echo "==> Installing dependencies with uv..."
-    uv sync
+    uv sync --all-packages
 fi
 
 echo "==> Syncing harness rules..."

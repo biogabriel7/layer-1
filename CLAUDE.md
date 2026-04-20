@@ -9,6 +9,10 @@
 
 The umbrella term is **LLM-based annotation with judge-based evaluation** — a subfield of AI evals applied to qualitative education data.
 
+The full architectural framework — what each layer does, how they compose,
+non-goals — lives in [`docs/framework.md`](docs/framework.md). Read it before
+touching Layer 1.5 or anything that crosses layer boundaries.
+
 ## How it runs
 
 Reads teacher observations from a per-school JSON export, runs each one through an LLM, and writes structured signals to `outputs/extractions.jsonl`. `eval.py` then scores those extractions.
@@ -18,10 +22,10 @@ Canonical schema and extraction rules live in `prompts/extractor.md`. When in do
 ## Run it
 
 ```bash
-uv sync
-uv run extract.py --limit 10              # extract (see --help for flags)
-uv run eval.py                            # programmatic checks + LLM audit
-uv run eval.py --no-audit                 # skip the audit for zero LLM cost
+uv sync --all-packages
+uv run --package layer-1 layer-1-extract --limit 10   # extract (always use --limit until told otherwise)
+uv run --package layer-1 layer-1-eval                 # programmatic checks + LLM audit
+uv run --package layer-1 layer-1-eval --no-audit      # skip the audit for zero LLM cost
 ```
 
 Inputs live in `inputs/observations-{school}-{YYYY-MM-DD}.json` (gitignored, real client data). Outputs go to `outputs/` (also gitignored).
@@ -31,9 +35,9 @@ Inputs live in `inputs/observations-{school}-{YYYY-MM-DD}.json` (gitignored, rea
 The audit flags suspicious extractions. To check whether the judge is right:
 
 ```bash
-uv run scripts/calibration/export.py                           # flagged rows → CSV
+uv run python packages/layer-1/scripts/calibration/export.py                           # flagged rows → CSV
 # fill `human_verdict` (flagged / not_flagged) and `human_note` by hand
-uv run scripts/calibration/agreement.py outputs/analysis/calibration-{ts}.csv
+uv run python packages/layer-1/scripts/calibration/agreement.py packages/layer-1/outputs/analysis/calibration-{ts}.csv
 ```
 
 ## Rules that aren't in the code

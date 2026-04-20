@@ -1,6 +1,6 @@
 """Terminal-report formatters for programmatic metrics and the audit."""
 
-from pipeline.models import (
+from layer_1.pipeline.models import (
     AUDIT_TARGET,
     TARGETS,
     AuditCheckResult,
