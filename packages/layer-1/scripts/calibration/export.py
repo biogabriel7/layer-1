@@ -52,12 +52,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator
 
+from core.text import cache_key as _cache_key
 from layer_1.pipeline.models import (
     ANALYSIS_DEFAULT_PATH,
     ANALYSIS_DIR,
     EXTRACTIONS_PATH,
 )
-from layer_1.pipeline.text import cache_key as _cache_key
 
 
 def main() -> int:

@@ -1,89 +1,15 @@
-"""Pydantic models for the Layer 1 LLM boundaries.
+"""Pydantic models for the Layer 1 audit LLM's response.
 
-These types define the contract between:
-  - the extractor LLM's response  →  `ExtractionOutput`
-  - the audit LLM's response      →  `AuditResponse`
-
-Validation raises `ValidationError` on a malformed response, which surfaces
-prompt-compliance failures loudly instead of silently masking them.
+The extractor-side schema (`Signal`, `ExtractionOutput`, `Participant`) lives
+in `core.schema.layer1` because it is the public contract between Layer 1 and
+downstream consumers (Layer 1.5 reads Layer 1's output).
 
 `extra="allow"` on the top-level models is intentional: if the prompt is
 updated to emit an additional field before the schema catches up, we don't
 want validation to hard-fail — the extra field just passes through.
 """
 
-from typing import Literal
-
 from pydantic import BaseModel, ConfigDict, Field
-
-# ---------------------------------------------------------------------------
-# Extraction output — what extract.py expects back from the extractor LLM
-# ---------------------------------------------------------------------------
-
-SignalType = Literal[
-    "behavioral_evidence",
-    "emotional_indicator",
-    "context_marker",
-    "concern_flag",
-]
-
-Confidence = Literal["high", "medium", "low"]
-
-Valence = Literal["positive", "negative", "mixed", "neutral"]
-
-Target = Literal[
-    "self", "peer", "group", "adult", "task", "object", "environment"
-]
-
-Agency = Literal["self_initiated", "prompted", "scaffolded", "external"]
-
-TemporalityCue = Literal["first_time", "recurring", "change", "one_time"]
-
-DomainDescriptor = Literal[
-    "body", "speech", "task", "peer", "adult", "feeling", "creation", "norm"
-]
-
-ParticipantRole = Literal[
-    "actor", "recipient", "self", "group_member", "bystander"
-]
-
-
-class Participant(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
-    name: str | None = None
-    role: ParticipantRole | None = None
-
-
-class Signal(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
-    evidence: str
-    type: SignalType
-    confidence: Confidence
-    valence: Valence | None = None
-    target: Target | None = None
-    agency: Agency | None = None
-    temporality_cue: TemporalityCue | None = None
-    domain_descriptors: list[DomainDescriptor] = Field(default_factory=list)
-    participants: list[Participant] = Field(default_factory=list)
-    reasoning: str
-
-
-class ExtractionOutput(BaseModel):
-    """Shape of what the extractor LLM returns *before* post-processing."""
-
-    model_config = ConfigDict(extra="allow")
-
-    language: str
-    source_type: Literal["teacher_observation"]
-    named_students: list[str]
-    signals: list[Signal]
-
-
-# ---------------------------------------------------------------------------
-# Audit output — what pipeline/judge.py expects back from the audit LLM
-# ---------------------------------------------------------------------------
 
 
 class AuditCheck(BaseModel):

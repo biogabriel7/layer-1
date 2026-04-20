@@ -12,8 +12,8 @@ are treated as orphans and skipped.
 import json
 import sys
 
+from core.text import cache_key
 from layer_1.pipeline.models import EXTRACTIONS_PATH, OBSERVATIONS_PATH, ResultFile, Signal
-from layer_1.pipeline.text import cache_key
 
 
 def load_results() -> list[ResultFile]:

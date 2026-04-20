@@ -14,7 +14,7 @@ from typing import Any, Iterable
 
 from openai import OpenAI
 
-from layer_1.pipeline.llm import call_json, make_client
+from core.llm import call_json, make_client
 from layer_1.pipeline.models import (
     AUDIT_CACHE_DIR,
     AUDIT_PROMPT_PATH,

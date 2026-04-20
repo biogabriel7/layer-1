@@ -9,27 +9,25 @@ last-wins, which keeps `--force` re-runs safe without rewriting the file."""
 import argparse
 import json
 import sys
-import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
 from openai import OpenAI
 
-from layer_1.pipeline.llm import call_json, make_client
+from core.io import append_jsonl
+from core.llm import call_json, make_client
+from core.schema.layer1 import ExtractionOutput
+from core.text import cache_key
 from layer_1.pipeline.models import (
     EXTRACTIONS_PATH,
     EXTRACTOR_PROMPT_PATH,
     OBSERVATIONS_PATH,
     QUALITY_CHECKS_PATH,
 )
-from layer_1.pipeline.schema import ExtractionOutput
-from layer_1.pipeline.text import cache_key
 
 MODEL = "anthropic/claude-opus-4-6"
 SCHEMA_VERSION = "v2"
-
-_WRITE_LOCK = threading.Lock()
 
 
 def load_system_prompt() -> str:
@@ -139,16 +137,8 @@ def process_row(
         "named_students_count": result["named_students_count"],
         "signals": result["signals"],
     }
-    _append_jsonl(output_path, output)
+    append_jsonl(output_path, output)
     return key
-
-
-def _append_jsonl(path: Path, record: dict[str, Any]) -> None:
-    """Append one JSON object as a single line, serialized under a lock so
-    concurrent workers can't interleave bytes."""
-    line = json.dumps(record, ensure_ascii=False)
-    with _WRITE_LOCK, path.open("a", encoding="utf-8") as f:
-        f.write(line + "\n")
 
 
 def sync_quality_checks(rows: list[dict[str, Any]], path: Path) -> int:
