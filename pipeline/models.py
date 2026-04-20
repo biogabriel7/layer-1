@@ -1,13 +1,37 @@
 """Dataclasses, constants, and paths shared across the Layer 1 pipeline."""
 
+import re
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 from typing import Any
 
 INPUTS_DIR = Path("inputs")
 OUTPUTS_DIR = Path("outputs")
 
-OBSERVATIONS_PATH = INPUTS_DIR / "observations-stfrancis-2026-04-17.json"
+# Filename convention: observations-{school-slug}-{YYYY-MM-DD}.json
+_OBSERVATIONS_DATE_RE = re.compile(r"-(\d{4}-\d{2}-\d{2})\.json$")
+
+
+def latest_observations_path() -> Path:
+    """Return the newest observations JSON in INPUTS_DIR, picked by the date
+    suffix in the filename (not mtime) so re-downloads don't shuffle order."""
+    candidates: list[tuple[date, Path]] = []
+    for p in INPUTS_DIR.glob("observations-*.json"):
+        m = _OBSERVATIONS_DATE_RE.search(p.name)
+        if not m:
+            continue
+        try:
+            d = date.fromisoformat(m.group(1))
+        except ValueError:
+            continue
+        candidates.append((d, p))
+    if not candidates:
+        raise FileNotFoundError(
+            f"No observations-*-YYYY-MM-DD.json found in {INPUTS_DIR}/"
+        )
+    candidates.sort(key=lambda t: t[0])
+    return candidates[-1][1]
 
 EXTRACTOR_PROMPT_PATH = Path("prompts/extractor.md")
 AUDIT_PROMPT_PATH = Path("prompts/judge_reference_free.md")
