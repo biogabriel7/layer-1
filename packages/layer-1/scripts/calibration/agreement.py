@@ -35,9 +35,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-from layer_1.pipeline.models import (  # noqa: E402
+from layer_1.pipeline.models import (
     ANALYSIS_DIR,
     AUDIT_PROMPT_PATH,
     EXTRACTOR_PROMPT_PATH,

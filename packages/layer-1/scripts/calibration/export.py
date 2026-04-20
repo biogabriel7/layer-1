@@ -52,14 +52,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-from layer_1.pipeline.models import (  # noqa: E402
+from layer_1.pipeline.models import (
     ANALYSIS_DEFAULT_PATH,
     ANALYSIS_DIR,
     EXTRACTIONS_PATH,
 )
-from layer_1.pipeline.text import cache_key as _cache_key  # noqa: E402
+from layer_1.pipeline.text import cache_key as _cache_key
 
 
 def main() -> int:
