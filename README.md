@@ -22,7 +22,7 @@ See [`docs/framework.md`](docs/framework.md) for the full architectural framewor
 ## Run
 
 ```
-uv sync                                               # installs core + all layers + dev tools
+uv sync --all-packages                                # installs core + all layers + dev tools
 uv run --package layer-1 layer-1-extract --limit 10   # extract (always use --limit until told otherwise)
 uv run --package layer-1 layer-1-eval                 # programmatic checks + LLM audit
 uv run --package layer-1 layer-1-eval --no-audit      # skip the audit for zero LLM cost

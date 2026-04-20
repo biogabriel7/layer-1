@@ -22,7 +22,7 @@ Canonical schema and extraction rules live in `prompts/extractor.md`. When in do
 ## Run it
 
 ```bash
-uv sync
+uv sync --all-packages
 uv run --package layer-1 layer-1-extract --limit 10   # extract (always use --limit until told otherwise)
 uv run --package layer-1 layer-1-eval                 # programmatic checks + LLM audit
 uv run --package layer-1 layer-1-eval --no-audit      # skip the audit for zero LLM cost

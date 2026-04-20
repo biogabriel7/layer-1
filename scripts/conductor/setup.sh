@@ -81,7 +81,7 @@ fi
 
 if [ -f "$PWD/pyproject.toml" ]; then
     echo "==> Installing dependencies with uv..."
-    uv sync
+    uv sync --all-packages
 fi
 
 echo "==> Syncing harness rules..."
