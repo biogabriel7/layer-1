@@ -20,8 +20,8 @@ from pipeline.llm import call_json, make_client
 from pipeline.models import (
     EXTRACTIONS_PATH,
     EXTRACTOR_PROMPT_PATH,
-    OBSERVATIONS_PATH,
     QUALITY_CHECKS_PATH,
+    latest_observations_path,
 )
 from pipeline.schema import ExtractionOutput
 from pipeline.text import cache_key
@@ -280,11 +280,15 @@ def main() -> None:
     parser.add_argument(
         "--input",
         type=Path,
-        default=OBSERVATIONS_PATH,
+        default=None,
         metavar="PATH",
-        help=f"Observation JSON file (default: {OBSERVATIONS_PATH})",
+        help="Observation JSON file (default: latest observations-*.json in inputs/)",
     )
     args = parser.parse_args()
+
+    if args.input is None:
+        args.input = latest_observations_path()
+        print(f"Using latest input: {args.input}", file=sys.stderr)
 
     EXTRACTIONS_PATH.parent.mkdir(exist_ok=True)
     existing_keys = load_existing_keys(EXTRACTIONS_PATH)

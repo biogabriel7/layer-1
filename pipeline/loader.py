@@ -4,15 +4,15 @@ Results live in `outputs/extractions.jsonl` (one JSON object per line, appended
 progressively by extract.py). Duplicate observation_ids are deduped last-wins
 so `--force` re-runs don't require rewriting the file.
 
-Results are cross-checked against the per-school observations JSON
-(`OBSERVATIONS_PATH`) — rows whose source observation is no longer present
-are treated as orphans and skipped.
+Results are cross-checked against the latest per-school observations JSON in
+`inputs/` — rows whose source observation is no longer present are treated as
+orphans and skipped.
 """
 
 import json
 import sys
 
-from pipeline.models import EXTRACTIONS_PATH, OBSERVATIONS_PATH, ResultFile, Signal
+from pipeline.models import EXTRACTIONS_PATH, ResultFile, Signal, latest_observations_path
 from pipeline.text import cache_key
 
 
@@ -24,7 +24,7 @@ def load_results() -> list[ResultFile]:
     obs_index: dict[str, tuple[str, int]] = {}
 
     try:
-        data = json.loads(OBSERVATIONS_PATH.read_text())
+        data = json.loads(latest_observations_path().read_text())
     except FileNotFoundError:
         data = None
     if isinstance(data, list):
