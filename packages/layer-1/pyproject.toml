@@ -1,0 +1,17 @@
+[project]
+name = "layer-1"
+version = "0.1.0"
+description = "Layer 1: raw extraction from teacher observations"
+requires-python = ">=3.13"
+dependencies = ["core"]
+
+[project.scripts]
+layer-1-extract = "layer_1.cli.extract:main"
+layer-1-eval    = "layer_1.cli.eval:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/layer_1"]
