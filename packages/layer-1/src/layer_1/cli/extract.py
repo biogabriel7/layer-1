@@ -59,7 +59,13 @@ def postprocess(result: dict[str, object], student_count: int) -> dict[str, obje
     else:
         result["insight_density"] = "high"
 
-    result["meaningful_content"] = signal_count > 0
+    # Meaningful content requires at least one high- or medium-confidence signal.
+    # A lone `low` signal (e.g., "Did well today") is the canonical placeholder
+    # and shouldn't count as meaningful.
+    result["meaningful_content"] = any(
+        isinstance(s, dict) and s.get("confidence") in ("high", "medium")
+        for s in signals
+    )
 
     named = result.get("named_students", [])
     if not isinstance(named, list):

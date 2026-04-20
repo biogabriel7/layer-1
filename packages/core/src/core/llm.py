@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 _OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+_JSON_DECODER = json.JSONDecoder()
 
 
 def make_client() -> OpenAI:
@@ -59,5 +60,9 @@ def call_json(
     if text.startswith("```"):
         text = text.split("\n", 1)[1]
         text = text.rsplit("```", 1)[0]
-    parsed: dict[str, Any] = json.loads(text)
+    # raw_decode tolerates trailing whitespace or commentary that some models
+    # occasionally append despite structured-output mode.
+    parsed, _end = _JSON_DECODER.raw_decode(text.lstrip())
+    if not isinstance(parsed, dict):
+        raise TypeError(f"expected JSON object, got {type(parsed).__name__}")
     return parsed

@@ -1,9 +1,12 @@
 [project]
 name = "layer-1-5"
 version = "0.1.0"
-description = "Layer 1.5: student-contextualized extraction (skeleton)"
+description = "Layer 1.5: student-contextualized extraction"
 requires-python = ">=3.13"
-dependencies = ["core"]
+dependencies = ["core", "layer-1"]
+
+[project.scripts]
+layer-1-5-contextualize = "layer_1_5.cli.contextualize:main"
 
 [build-system]
 requires = ["hatchling"]
