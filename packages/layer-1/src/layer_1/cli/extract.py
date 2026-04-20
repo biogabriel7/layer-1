@@ -16,15 +16,15 @@ from typing import Any
 
 from openai import OpenAI
 
-from pipeline.llm import call_json, make_client
-from pipeline.models import (
+from layer_1.pipeline.llm import call_json, make_client
+from layer_1.pipeline.models import (
     EXTRACTIONS_PATH,
     EXTRACTOR_PROMPT_PATH,
     OBSERVATIONS_PATH,
     QUALITY_CHECKS_PATH,
 )
-from pipeline.schema import ExtractionOutput
-from pipeline.text import cache_key
+from layer_1.pipeline.schema import ExtractionOutput
+from layer_1.pipeline.text import cache_key
 
 MODEL = "anthropic/claude-opus-4-6"
 SCHEMA_VERSION = "v2"
